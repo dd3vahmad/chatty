@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 interface IUser extends Document {
   username: string;
@@ -12,6 +13,7 @@ interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   updateProfilePicture(newPicUrl: string): Promise<void>;
   getPublicProfile(): Partial<IUser>;
+  generateAuthToken(): string;
 }
 
 const userSchema = new Schema<IUser>(
@@ -64,6 +66,13 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// Method to generate auth token
+userSchema.methods.generateAuthToken = function (): string {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET as string, {
+    expiresIn: "7d",
+  });
+};
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function (

@@ -8,13 +8,18 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const user = await User.create({ email, password, fullname, username });
 
-    _res.success(
-      201,
-      res,
-      "User created successfully",
-      user.getPublicProfile()
-    );
+    const token = user.generateAuthToken();
+
+    res.cookie("x-auth-token", token, {
+      httpOnly: true, // mitigates XSS attacks
+      sameSite: "strict", // mitigates CSRF attacks
+      maxAge: 7 * 24 * 60 * 60,
+    });
   } catch (error: any) {
     _res.error(500, res, error.message);
   }
+};
+
+export const login = async (req: Request, res: Response) => {
+  // try
 };
