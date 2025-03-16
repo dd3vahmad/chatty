@@ -74,6 +74,15 @@ userSchema.methods.generateAuthToken = function (): string {
   });
 };
 
+// Method to check if user exists
+userSchema.methods.checkUser = async function () {
+  const user = await User.findOne({
+    $or: [{ username: this.username }, { email: this.email }],
+  });
+
+  return !!user;
+};
+
 // Method to compare passwords
 userSchema.methods.comparePassword = async function (
   candidatePassword: string

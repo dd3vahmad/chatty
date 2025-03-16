@@ -39,7 +39,7 @@ export const signin = async (
 ) => {
   try {
     //
-    _res.success(200, res, "Sign in successful");
+    _res.success(200, res, "Signin successful");
   } catch (error) {
     next(error);
   }
@@ -51,8 +51,8 @@ export const signout = async (
   next: NextFunction
 ) => {
   try {
-    //
-    _res.success(200, res, "Sign out successful");
+    res.clearCookie("x-auth-token");
+    _res.success(200, res, "Signout successful");
   } catch (error) {
     next(error);
   }
