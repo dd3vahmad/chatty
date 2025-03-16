@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Model } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   fullname: string;
   email: string;
@@ -45,8 +45,6 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
-
 // Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -55,32 +53,11 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Check if username or email already exists
-userSchema.pre("save", async function (next) {
-  const user = await User.findOne({
-    $or: [{ username: this.username }, { email: this.email }],
-  });
-  if (user) {
-    const error = new Error("Username or email already exists");
-    next(error);
-  }
-  next();
-});
-
 // Method to generate auth token
 userSchema.methods.generateAuthToken = function (): string {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET as string, {
     expiresIn: "7d",
   });
-};
-
-// Method to check if user exists
-userSchema.methods.checkUser = async function () {
-  const user = await User.findOne({
-    $or: [{ username: this.username }, { email: this.email }],
-  });
-
-  return !!user;
 };
 
 // Method to compare passwords
@@ -109,5 +86,7 @@ userSchema.methods.getPublicProfile = function (): Partial<IUser> {
     updatedAt: this.updatedAt,
   };
 };
+
+const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default User;
