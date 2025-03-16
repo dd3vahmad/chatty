@@ -9,8 +9,17 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 
-app.use((error: Error, _: Request, res: Response) => {
-  _res.error(500, res, `Internal Server Error: ${error.message}`);
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  const statusCode = 500;
+  const message = err.message || "Internal Server Error";
+
+  return res.status(statusCode).json({ message, failed: true }) as any;
+});
+
+app.get("/", (req: Request, res: Response) => {
+  res.render("i", {
+    title: `Hi ${req.hostname}! Welcome to Chatty Backend.`,
+  });
 });
 
 export default app;
