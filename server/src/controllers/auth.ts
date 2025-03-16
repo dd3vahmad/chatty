@@ -1,8 +1,12 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { _res } from "../lib/utils";
 import User from "../models/user";
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { email, password, fullname, username } = req.body;
 
   try {
@@ -11,15 +15,45 @@ export const signup = async (req: Request, res: Response) => {
     const token = user.generateAuthToken();
 
     res.cookie("x-auth-token", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true, // mitigates XSS attacks
       sameSite: "strict", // mitigates CSRF attacks
-      maxAge: 7 * 24 * 60 * 60,
+      secure: process.env.NODE_ENV !== "development" ? true : false,
     });
+
+    _res.success(
+      201,
+      res,
+      "User registered successfully",
+      user.getPublicProfile()
+    );
   } catch (error: any) {
-    _res.error(500, res, error.message);
+    next(error);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
-  // try
+export const signin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    //
+    _res.success(200, res, "Sign in successful");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const signout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    //
+    _res.success(200, res, "Sign out successful");
+  } catch (error) {
+    next(error);
+  }
 };
