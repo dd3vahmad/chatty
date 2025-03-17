@@ -3,7 +3,6 @@ import { _res } from "../lib/utils";
 import User, { IUser } from "../models/user";
 
 const attachJWT = (user: IUser, res: Response) => {
-  // console.log("user", user);
   const token = user.generateAuthToken();
 
   res.cookie("x-auth-token", token, {
