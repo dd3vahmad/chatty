@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
+import cookieParser from "cookie-parser";
 
 import { authRoutes } from "./routes";
 import { _res } from "./lib/utils";
@@ -6,6 +7,7 @@ import { _res } from "./lib/utils";
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 
