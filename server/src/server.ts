@@ -9,13 +9,19 @@ connectDb(); // Connect to the database
 
 // Socket.io initialization
 const server = createServer(app)
-const io = new Server(server)
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    allowedHeaders: ["x-auth-token"],
+    credentials: true
+  }
+})
 
 io.on("connection", (socket) => {
   console.log("New connection")
 
   socket.on("disconnect", (c) => {
-    console.log("Connection closed", c)
+    console.log("Connection closed: ", c)
   })
 })
 
