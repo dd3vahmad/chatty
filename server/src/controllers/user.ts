@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../models/user";
 import { _res } from "../lib/utils";
+import { IRequestWithUser } from "../types/interfaces";
 
 export const getFriends = async (
-  req: Request,
+  req: IRequestWithUser,
   res: Response,
   next: NextFunction
 ) => {

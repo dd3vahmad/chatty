@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import Message from "../models/message";
 import { _res, uploadMedia } from "../lib/utils";
+import { IRequestWithUser } from "../types/interfaces";
 
 export const getMessages = async (
-  req: Request,
+  req: IRequestWithUser,
   res: Response,
   next: NextFunction
 ) => {
@@ -25,7 +26,7 @@ export const getMessages = async (
 };
 
 export const sendMessage = async (
-  req: Request,
+  req: IRequestWithUser,
   res: Response,
   next: NextFunction
 ) => {

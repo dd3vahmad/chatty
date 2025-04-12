@@ -1,9 +1,11 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import { _res } from "../lib/utils";
 import jwt from "jsonwebtoken";
+import { IRequestWithUser } from "../types/interfaces";
+import { IUser } from "../models/user";
 
 export const authenticate = (
-  req: Request,
+  req: IRequestWithUser,
   res: Response,
   next: NextFunction
 ) => {
@@ -20,7 +22,7 @@ export const authenticate = (
       _res.error(401, res, "Unauthenticated - Invalid token.");
     }
 
-    req.user = decoded;
+    req.user = decoded as any as IUser;
   } catch (error) {
     next(error);
   }
