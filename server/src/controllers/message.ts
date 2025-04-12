@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import Message from "../models/message";
 import { _res, uploadMedia } from "../lib/utils";
 import { IRequestWithUser } from "../types/interfaces";
@@ -35,7 +35,7 @@ export const sendMessage = async (
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    let mediaUrl;
+    let mediaUrl: string;
     if (media) {
       const { secure_url } = await uploadMedia(media);
       mediaUrl = secure_url;
