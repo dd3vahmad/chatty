@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 export interface IUser extends Document {
   username: string;
-  fullname: string;
+  customname: string;
   email: string;
   password: string;
   pic: string;
@@ -23,9 +23,9 @@ const userSchema = new Schema<IUser>(
       required: true,
       unique: true,
     },
-    fullname: {
+    customname: {
       type: String,
-      required: true,
+      required: false,
     },
     email: {
       type: String,
@@ -46,7 +46,7 @@ const userSchema = new Schema<IUser>(
 );
 
 // Hash password before saving
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function(next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -54,21 +54,21 @@ userSchema.pre("save", async function (next) {
 });
 
 // Method to generate auth token
-userSchema.methods.generateAuthToken = function (): string {
+userSchema.methods.generateAuthToken = function(): string {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET as string, {
     expiresIn: "7d",
   });
 };
 
 // Method to compare passwords
-userSchema.methods.comparePassword = async function (
+userSchema.methods.comparePassword = async function(
   candidatePassword: string
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Method to update profile picture
-userSchema.methods.updateProfilePicture = async function (
+userSchema.methods.updateProfilePicture = async function(
   newPicUrl: string
 ): Promise<void> {
   this.pic = newPicUrl;
@@ -76,10 +76,10 @@ userSchema.methods.updateProfilePicture = async function (
 };
 
 // Method to get public profile (without password)
-userSchema.methods.getPublicProfile = function (): Partial<IUser> {
+userSchema.methods.getPublicProfile = function(): Partial<IUser> {
   return {
     username: this.username,
-    fullname: this.fullname,
+    customname: this.customname,
     email: this.email,
     pic: this.pic,
     createdAt: this.createdAt,
