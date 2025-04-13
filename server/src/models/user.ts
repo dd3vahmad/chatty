@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cloudinary from "../lib/cloudinary";
 
 export interface IUser extends Document {
   username: string;
@@ -57,6 +58,13 @@ userSchema.pre("save", async function(next) {
 userSchema.pre("save", function() {
   this.username = this.username.trim().toLowerCase();
 });
+
+// Upload picture to cloudinary before saving user
+userSchema.pre("save", async function(next) {
+  if (!this.pic) return next();
+  this.pic = (await cloudinary.uploader.upload(this.pic)).secure_url;
+  next();
+})
 
 // Method to generate auth token
 userSchema.methods.generateAuthToken = function(): string {
