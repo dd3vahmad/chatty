@@ -193,8 +193,8 @@ userSchema.methods.resetPassword = async function(newPassword: string): Promise<
 /**
  * Get public profile (excluding sensitive information)
  */
-userSchema.methods.getPublicProfile = function(): Partial<IUser> {
-  return {
+userSchema.methods.getPublicProfile = async function(requestingUserId?: string): Promise<Partial<IUser> & { name?: string }> {
+  const profile: Partial<IUser> & { name?: string } = {
     id: this._id,
     username: this.username,
     bio: this.bio,
@@ -203,6 +203,25 @@ userSchema.methods.getPublicProfile = function(): Partial<IUser> {
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
+
+  if (requestingUserId) {
+    try {
+      const Friend = mongoose.model('Friend');
+
+      const friendEntry = await Friend.findOne({
+        createdBy: requestingUserId,
+        userId: this._id
+      });
+
+      if (friendEntry) {
+        profile.name = friendEntry.name;
+      }
+    } catch (error) {
+      console.error('Error fetching friend data:', error);
+    }
+  }
+
+  return profile;
 };
 
 // Create user model
