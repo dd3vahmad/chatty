@@ -3,94 +3,212 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cloudinary from "../lib/cloudinary";
 
+const PASSWORD_MIN_LENGTH = 8;
+const JWT_EXPIRATION = "7d";
+const SALT_ROUNDS = 10;
+const AVATAR_STYLES = ['micah', 'avataaars', 'personas', 'bottts', 'identicon'];
+
 export interface IUser extends Document {
   username: string;
   bio: string;
   email: string;
   password: string;
   pic: string;
+  cloudinaryId: string | null;
   createdAt: Date;
   updatedAt: Date;
+
+  // Methods
   comparePassword(candidatePassword: string): Promise<boolean>;
-  updateProfilePicture(newPicUrl: string): Promise<void>;
   getPublicProfile(): Partial<IUser>;
   generateAuthToken(): string;
+  resetPassword(newPassword: string): Promise<void>;
 }
 
 const userSchema = new Schema<IUser>(
   {
     username: {
       type: String,
-      required: true,
+      required: [true, "Username is required"],
       unique: true,
+      trim: true,
+      lowercase: true,
+      minLength: [3, "Username must be at least 3 characters long"],
+      maxLength: [30, "Username must be less than 30 characters long"],
     },
     bio: {
       type: String,
-      required: false,
+      default: "",
+      maxLength: [250, "Bio must be less than 250 characters long"],
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
+      trim: true,
+      lowercase: true,
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        "Please provide a valid email address",
+      ],
     },
     password: {
       type: String,
-      required: true,
-      minLength: 8,
+      required: [true, "Password is required"],
+      minLength: [PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`],
+      select: false, // Don't include password in query results by default
     },
     pic: {
       type: String,
-      default: "https://via.placeholder.com/150",
+    },
+    cloudinaryId: {
+      type: String,
+      default: null,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (_, ret) => {
+        delete ret.password;
+        return ret;
+      }
+    }
+  }
 );
 
-// Clean and Hash password before saving
+/**
+ * Generate a random avatar for new users
+ */
+userSchema.pre("save", function(next) {
+  // Skip if user already has a profile picture or this isn't a new user
+  if (!this.isNew || this.pic) return next();
+
+  try {
+    const randomStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    // Use username for consistent generation across sessions
+    const seed = this.username || this._id.toString();
+    this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${seed}`;
+  } catch (error) {
+    console.error("Error generating avatar:", error);
+    // Fallback to a simple identicon style if there's an error
+    this.pic = `https://api.dicebear.com/7.x/identicon/svg?seed=${this._id.toString()}`;
+  }
+  next();
+});
+
+/**
+ * Hash password before saving
+ */
 userSchema.pre("save", async function(next) {
+  // Only hash the password if it has been modified (or is new)
   if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password.trim().toLowerCase(), salt);
-  next();
+
+  try {
+    const salt = await bcrypt.genSalt(SALT_ROUNDS);
+    this.password = await bcrypt.hash(this.password.trim(), salt);
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
 });
 
-// Clean username before saving
-userSchema.pre("save", function() {
-  this.username = this.username.trim().toLowerCase();
-});
-
-// Upload picture to cloudinary before saving user
+/**
+ * Handle profile picture uploads
+ */
 userSchema.pre("save", async function(next) {
-  if (!this.pic) return next();
-  this.pic = (await cloudinary.uploader.upload(this.pic)).secure_url;
-  next();
-})
+  // Skip if pic field hasn't been modified
+  if (!this.isModified("pic")) return next();
 
-// Method to generate auth token
+  try {
+    // Only process base64 image uploads
+    if (this.pic?.startsWith("data:image")) {
+      // Clean up old image if it exists
+      if (this.cloudinaryId) {
+        try {
+          await cloudinary.uploader.destroy(this.cloudinaryId);
+        } catch (error) {
+          console.error("Error deleting old profile image:", error);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Upload new image with proper naming
+      const publicId = `profiles/${this._id}_${Date.now()}`;
+
+      const uploadResponse = await cloudinary.uploader.upload(this.pic, {
+        public_id: publicId,
+        folder: "user-profiles",
+        overwrite: true,
+        resource_type: "image",
+        transformation: [
+          { width: 400, height: 400, crop: "limit" }, // Resize for efficiency
+          { quality: "auto" } // Automatic quality optimization
+        ],
+      });
+
+      // Update user data with new image info
+      this.pic = uploadResponse.secure_url;
+      this.cloudinaryId = uploadResponse.public_id;
+    }
+    next();
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    // Generate a fallback avatar without disrupting save process
+    const randomStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${this._id.toString()}`;
+    this.cloudinaryId = null;
+    next();
+  }
+});
+
+/**
+ * Generate JWT auth token
+ */
 userSchema.methods.generateAuthToken = function(): string {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET as string, {
-    expiresIn: "7d",
-  });
+  // Check if JWT_SECRET is available
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
+
+  return jwt.sign(
+    { id: this._id },
+    process.env.JWT_SECRET,
+    { expiresIn: JWT_EXPIRATION }
+  );
 };
 
-// Method to compare passwords
-userSchema.methods.comparePassword = async function(
-  candidatePassword: string
-): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
+/**
+ * Compare provided password with stored hash
+ */
+userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  try {
+    // If password field isn't selected, we need to get it first
+    const user = this.password ? this : await User.findById(this._id).select("+password");
+    if (!user || !user.password) {
+      throw new Error("Password not available for comparison");
+    }
+    return bcrypt.compare(candidatePassword, user.password);
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
 };
 
-// Method to update profile picture
-userSchema.methods.updateProfilePicture = async function(
-  newPicUrl: string
-): Promise<void> {
-  this.pic = newPicUrl;
+/**
+ * Reset user password
+ */
+userSchema.methods.resetPassword = async function(newPassword: string): Promise<void> {
+  this.password = newPassword;
   await this.save();
 };
 
-// Method to get public profile (without password)
+/**
+ * Get public profile (excluding sensitive information)
+ */
 userSchema.methods.getPublicProfile = function(): Partial<IUser> {
   return {
+    _id: this._id,
     username: this.username,
     bio: this.bio,
     email: this.email,
@@ -100,6 +218,7 @@ userSchema.methods.getPublicProfile = function(): Partial<IUser> {
   };
 };
 
+// Create user model
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default User;

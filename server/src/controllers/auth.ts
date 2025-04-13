@@ -18,7 +18,7 @@ export const signup = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { email, password, fullname, username } = req.body;
+  const { email, password, username } = req.body;
 
   try {
     const existingUsername = await User.findOne({ username });
@@ -32,11 +32,11 @@ export const signup = async (
       _res.error(400, res, "Email has already been used");
       return
     }
-    const user = await User.create({ email, password, fullname, username });
+    const user = await User.create({ email, password, username });
 
     attachJWT(user, res);
 
-    _res.success(201, res, "Registeration successful", user.getPublicProfile());
+    _res.success(201, res, "Registration successful", user.getPublicProfile());
   } catch (error: any) {
     next(error);
   }
