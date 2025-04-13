@@ -56,7 +56,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: [true, "Password is required"],
       minLength: [PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`],
-      select: false, // Don't include password in query results by default
+      select: false,
     },
     pic: {
       type: String,
@@ -81,17 +81,14 @@ const userSchema = new Schema<IUser>(
  * Generate a random avatar for new users
  */
 userSchema.pre("save", function(next) {
-  // Skip if user already has a profile picture or this isn't a new user
   if (!this.isNew || this.pic) return next();
 
   try {
     const randomStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
-    // Use username for consistent generation across sessions
     const seed = this.username || this._id.toString();
     this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${seed}`;
   } catch (error) {
     console.error("Error generating avatar:", error);
-    // Fallback to a simple identicon style if there's an error
     this.pic = `https://api.dicebear.com/7.x/identicon/svg?seed=${this._id.toString()}`;
   }
   next();
@@ -101,7 +98,6 @@ userSchema.pre("save", function(next) {
  * Hash password before saving
  */
 userSchema.pre("save", async function(next) {
-  // Only hash the password if it has been modified (or is new)
   if (!this.isModified("password")) return next();
 
   try {
@@ -117,44 +113,37 @@ userSchema.pre("save", async function(next) {
  * Handle profile picture uploads
  */
 userSchema.pre("save", async function(next) {
-  // Skip if pic field hasn't been modified
   if (!this.isModified("pic")) return next();
 
   try {
-    // Only process base64 image uploads
     if (this.pic?.startsWith("data:image")) {
-      // Clean up old image if it exists
       if (this.cloudinaryId) {
         try {
           await cloudinary.uploader.destroy(this.cloudinaryId);
         } catch (error) {
           console.error("Error deleting old profile image:", error);
-          // Continue with upload even if delete fails
         }
       }
 
-      // Upload new image with proper naming
       const publicId = `profiles/${this._id}_${Date.now()}`;
 
       const uploadResponse = await cloudinary.uploader.upload(this.pic, {
         public_id: publicId,
-        folder: "user-profiles",
+        folder: "profiles",
         overwrite: true,
         resource_type: "image",
         transformation: [
-          { width: 400, height: 400, crop: "limit" }, // Resize for efficiency
-          { quality: "auto" } // Automatic quality optimization
+          { width: 400, height: 400, crop: "limit" },
+          { quality: "auto" }
         ],
       });
 
-      // Update user data with new image info
       this.pic = uploadResponse.secure_url;
       this.cloudinaryId = uploadResponse.public_id;
     }
     next();
   } catch (error) {
     console.error("Error uploading profile picture:", error);
-    // Generate a fallback avatar without disrupting save process
     const randomStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
     this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${this._id.toString()}`;
     this.cloudinaryId = null;
@@ -166,7 +155,6 @@ userSchema.pre("save", async function(next) {
  * Generate JWT auth token
  */
 userSchema.methods.generateAuthToken = function(): string {
-  // Check if JWT_SECRET is available
   if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET environment variable is not set");
   }
@@ -183,7 +171,6 @@ userSchema.methods.generateAuthToken = function(): string {
  */
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
   try {
-    // If password field isn't selected, we need to get it first
     const user = this.password ? this : await User.findById(this._id).select("+password");
     if (!user || !user.password) {
       throw new Error("Password not available for comparison");
@@ -208,7 +195,7 @@ userSchema.methods.resetPassword = async function(newPassword: string): Promise<
  */
 userSchema.methods.getPublicProfile = function(): Partial<IUser> {
   return {
-    _id: this._id,
+    id: this._id,
     username: this.username,
     bio: this.bio,
     email: this.email,
