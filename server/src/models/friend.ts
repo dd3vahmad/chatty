@@ -1,9 +1,9 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
 
 export interface IFriend extends Document {
   name: string;
-  userId: mongoose.Types.ObjectId;
-  createdBy: mongoose.Types.ObjectId;
+  userId: Schema.Types.ObjectId;
+  createdBy: Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,3 +26,7 @@ const friendSchema = new Schema<IFriend>(
   },
   { timestamps: true }
 )
+
+const Friend: Model<IFriend> = mongoose.model<IFriend>("Friend", friendSchema);
+
+export default Friend;

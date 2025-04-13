@@ -29,7 +29,7 @@ const chatRoomSchema = new Schema<IChatRoom>(
     limit: {
       type: Number,
       required: true,
-      default: 10,
+      default: 2,
     },
     members: [{
       type: Schema.Types.ObjectId,
@@ -41,11 +41,10 @@ const chatRoomSchema = new Schema<IChatRoom>(
     }],
     password: {
       type: String,
-      required: false, // Making it optional
+      required: false,
     },
     pic: {
       type: String,
-      default: "https://via.placeholder.com/150",
     },
     isTemporary: {
       type: Boolean,

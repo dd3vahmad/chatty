@@ -1,4 +1,4 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
 import User, { IUser } from "./user";
 
 export interface IMessage extends Document {
@@ -6,16 +6,16 @@ export interface IMessage extends Document {
   getSender(): IUser;
 }
 
-const messageSchema = new mongoose.Schema(
+const messageSchema = new Schema(
   {
     senderId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    receiverId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    roomId: {
+      type: Schema.Types.ObjectId,
+      ref: "ChatRoom",
       required: true,
     },
     text: {
@@ -24,17 +24,16 @@ const messageSchema = new mongoose.Schema(
     media: {
       type: String,
     },
+    viewers: [{
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    }],
   },
   { timestamps: true }
 );
 
-// Method to get the receiver's public profile.
-messageSchema.methods.getReceiver = async function () {
-  return (await User.findById(this.receiverId)).getPublicProfile();
-};
-
 // Method to get the sender's public profile.
-messageSchema.methods.getSender = async function () {
+messageSchema.methods.getSender = async function() {
   return (await User.findById(this.senderId)).getPublicProfile();
 };
 
