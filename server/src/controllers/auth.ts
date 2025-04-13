@@ -21,6 +21,17 @@ export const signup = async (
   const { email, password, fullname, username } = req.body;
 
   try {
+    const existingUsername = await User.findOne({ username });
+    const existingUserEmail = await User.findOne({ email });
+
+    if (existingUsername) {
+      _res.error(400, res, "Username is already in use");
+      return
+    }
+    if (existingUserEmail) {
+      _res.error(400, res, "Email has already been used");
+      return
+    }
     const user = await User.create({ email, password, fullname, username });
 
     attachJWT(user, res);
@@ -37,7 +48,7 @@ export const signin = async (
   next: NextFunction
 ) => {
   try {
-    const { identifier, password } = req.body; // identifier == email/username
+    const { identifier, password } = req.body; // identifier => email/username
 
     const validUser = await User.findOne({
       $or: [{ username: identifier }, { email: identifier }],
@@ -70,6 +81,7 @@ export const signout = async (
 ) => {
   try {
     res.clearCookie("x-auth-token");
+    void req
     _res.success(200, res, "Signout successful");
   } catch (error) {
     next(error);

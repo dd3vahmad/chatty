@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 export interface IUser extends Document {
   username: string;
-  customname: string;
+  bio: string;
   email: string;
   password: string;
   pic: string;
@@ -23,7 +23,7 @@ const userSchema = new Schema<IUser>(
       required: true,
       unique: true,
     },
-    customname: {
+    bio: {
       type: String,
       required: false,
     },
@@ -45,12 +45,17 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Hash password before saving
+// Clean and Hash password before saving
 userSchema.pre("save", async function(next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password.trim().toLowerCase(), salt);
   next();
+});
+
+// Clean username before saving
+userSchema.pre("save", function() {
+  this.username = this.username.trim().toLowerCase();
 });
 
 // Method to generate auth token
@@ -79,7 +84,7 @@ userSchema.methods.updateProfilePicture = async function(
 userSchema.methods.getPublicProfile = function(): Partial<IUser> {
   return {
     username: this.username,
-    customname: this.customname,
+    bio: this.bio,
     email: this.email,
     pic: this.pic,
     createdAt: this.createdAt,
