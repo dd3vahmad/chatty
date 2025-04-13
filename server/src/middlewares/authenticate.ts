@@ -23,6 +23,7 @@ export const authenticate = (
     }
 
     req.user = decoded as any as IUser;
+    next()
   } catch (error) {
     next(error);
   }

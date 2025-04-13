@@ -40,4 +40,4 @@ coverage/
 *.sln
 
 # Environment variables
-.env
+.env.env
