@@ -11,6 +11,24 @@ import {
 import mongoose from "mongoose";
 
 /**
+* Gets user chatrooms
+*
+**/
+export const getChatRooms = async (
+  req: IRequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const chats = await ChatRoom.findByMember(req.user.id as string);
+
+    _res.success(200, res, "Chats fetched successfully", chats.map(chat => chat.getPublicProfile()));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
 * Create a new chat room (direct message or group chat)
 *
 **/

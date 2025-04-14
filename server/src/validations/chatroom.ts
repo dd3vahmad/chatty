@@ -35,11 +35,6 @@ export const createDirectChatRoomSchema = Joi.object({
     .messages({
       'array.min': 'At least one member is required',
       'array.max': 'Direct chat can only have two members'
-    }),
-  createdBy: objectIdValidator.objectId()
-    .required()
-    .messages({
-      'any.required': 'Creator ID is required'
     })
 });
 
@@ -95,11 +90,6 @@ export const createGroupChatRoomSchema = Joi.object({
     }),
   isTemporary: Joi.boolean()
     .default(true),
-  createdBy: objectIdValidator.objectId()
-    .required()
-    .messages({
-      'any.required': 'Creator ID is required'
-    })
 });
 
 // Update ChatRoom validation schema
