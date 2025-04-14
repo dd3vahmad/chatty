@@ -27,11 +27,13 @@ export const updateProfile = async (
     const { username, bio, email, pic } = req.body;
 
     if (!username && !bio && !email && !pic) {
-      return _res.error(400, res, "No valid profile fields provided for update");
+      _res.error(400, res, "No valid profile fields provided for update");
+      return
     }
 
     if (!username || !email) {
-      return _res.error(400, res, "Email and username are required fields")
+      _res.error(400, res, "Email and username are required fields");
+      return
     }
 
     const updateData: { [key: string]: any } = {};
@@ -41,17 +43,20 @@ export const updateProfile = async (
     updateData.email = email.toLowerCase().trim();
 
     if (typeof pic !== 'string') {
-      return _res.error(400, res, "Invalid profile picture format");
+      _res.error(400, res, "Invalid profile picture format");
+      return
     }
 
     if (!(pic.startsWith('data:image/') || pic.startsWith('http'))) {
-      return _res.error(400, res, "Profile picture must be a valid image URL or data URL");
+      _res.error(400, res, "Profile picture must be a valid image URL or data URL");
+      return
     }
 
     updateData.pic = pic;
 
     if (Object.keys(updateData).length === 0) {
-      return _res.error(400, res, "No valid profile fields provided for update");
+      _res.error(400, res, "No valid profile fields provided for update");
+      return
     }
 
     const updatedProfile = await User.findByIdAndUpdate(
@@ -61,17 +66,19 @@ export const updateProfile = async (
     );
 
     if (!updatedProfile) {
-      return _res.error(404, res, "User not found");
+      _res.error(404, res, "User not found");
+      return
     }
 
     _res.success(200, res, "User profile updated successfully", updatedProfile.getPublicProfile());
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return _res.error(400, res, error.message);
+      _res.error(400, res, error.message);
+      return
     }
     if (error.code === 11000) {
-      // Handle duplicate key errors
-      return _res.error(409, res, "Username or email is already in use");
+      _res.error(409, res, "Username or email is already in use"); // Handle duplicate key errors
+      return
     }
     next(error);
   }

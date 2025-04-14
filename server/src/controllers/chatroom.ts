@@ -8,7 +8,6 @@ import {
   memberActionSchema,
   updateChatRoomSchema
 } from "../validations/chatroom";
-import { IUser } from "../models/user";
 import mongoose from "mongoose";
 
 /**
@@ -155,7 +154,7 @@ export const addMember = async (
 *
 **/
 export const joinChatRoom = async (
-  req: IRequestWithUser | Request,
+  req: IRequestWithUser,
   res: Response,
   next: NextFunction
 ) => {
@@ -193,7 +192,7 @@ export const joinChatRoom = async (
     }
 
     let userId: mongoose.Types.ObjectId;
-    let userInfo: IUser;
+    let userInfo: any;
 
     // Handle registered users
     if ('user' in req && req.user) {

@@ -15,6 +15,7 @@ export interface IUser extends Document {
   password: string;
   pic: string;
   cloudinaryId: string | null;
+  isGuest: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -65,6 +66,10 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: null,
     },
+    isGuest: {
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true,

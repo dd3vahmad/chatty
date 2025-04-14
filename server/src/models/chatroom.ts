@@ -160,5 +160,5 @@ export interface IChatRoomModel extends Model<IChatRoom> {
   findByAdmin(userId: string): Promise<IChatRoom[]>;
 }
 
-const ChatRoom: IChatRoomModel = mongoose.model<IChatRoom>("ChatRoom", chatRoomSchema) as IChatRoomModel;
+const ChatRoom: IChatRoomModel = mongoose.model<IChatRoom, IChatRoomModel>("ChatRoom", chatRoomSchema);
 export default ChatRoom;
