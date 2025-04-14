@@ -23,12 +23,9 @@ const chatRoomSchema = new Schema<IChatRoom>(
   {
     name: {
       type: String,
-      required: true,
-      unique: true,
     },
     limit: {
       type: Number,
-      required: true,
       default: 2,
     },
     members: [{
