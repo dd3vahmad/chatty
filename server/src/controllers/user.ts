@@ -31,7 +31,7 @@ export const getUserProfile = async (
 }
 
 /**
-* Get all user profiles
+* Get and search all users
 *
 **/
 export const getAllUserProfiles = async (
@@ -127,6 +127,82 @@ export const getAllUserProfiles = async (
     }));
 
     _res.success(200, res, "User profile(s) fetched successfully", userProfiles);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+* Get and search current user's friends
+*
+**/
+export const getAllFriends = async (
+  req: IRequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    let searchQuery = (req.query.name as string)?.trim();
+    const loggedInUserId = req.user.id;
+    let friends = [];
+
+    if (searchQuery) {
+      // Search friends by fuzzy custom name match if search query exists
+      friends = await Friend.aggregate([
+        {
+          $search: {
+            index: "default",
+            text: {
+              query: searchQuery,
+              path: "name",
+              fuzzy: { maxEdits: 2 }
+            }
+          }
+        },
+        {
+          $match: { createdBy: new Types.ObjectId(loggedInUserId) }
+        }
+      ]);
+    } else {
+      // If no search query, get all friends of the logged in user
+      friends = await Friend.find({ createdBy: new Types.ObjectId(loggedInUserId) })
+        .lean();
+    }
+
+    // Get user details for all friends
+    const friendUserIds = friends.map(friend => friend.userId);
+    const friendUsers = await User.find({ _id: { $in: friendUserIds } })
+      .select("_id username bio email pic createdAt updatedAt")
+      .lean();
+
+    // Create a map of user IDs to user details
+    const userMap = new Map();
+    friendUsers.forEach(user => {
+      userMap.set(user._id.toString(), user);
+    });
+
+    // Create a map of user IDs to custom names
+    const customNameMap = {};
+    friends.forEach(friend => {
+      customNameMap[friend.userId.toString()] = friend.name;
+    });
+
+    // Assemble final friend profiles
+    const friendProfiles = friendUsers.map(user => {
+      const userId = user._id.toString();
+      return {
+        id: user._id,
+        username: user.username,
+        bio: user.bio,
+        email: user.email,
+        pic: user.pic,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        name: customNameMap[userId] || undefined,
+      };
+    });
+
+    _res.success(200, res, "Friends fetched successfully", friendProfiles);
   } catch (error) {
     next(error);
   }
