@@ -67,13 +67,7 @@ export const createGroupChatRoomSchema = Joi.object({
       'any.required': 'Members array is required'
     }),
   admins: Joi.array()
-    .items(objectIdValidator.objectId())
-    .min(1)
-    .required()
-    .messages({
-      'array.min': 'At least one admin is required',
-      'any.required': 'Admins array is required'
-    }),
+    .items(objectIdValidator.objectId()),
   password: Joi.string()
     .min(6)
     .max(100)

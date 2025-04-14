@@ -44,6 +44,16 @@ export const createChatRoom = async (
       chatRoomData.members.push(req.user.id);
     }
 
+    if (chatRoomData.members.length < 2) {
+      _res.error(400, res, "A chat must contain atleast 2 members");
+      return
+    }
+
+    if (chatRoomData.limit && chatRoomData.limit < chatRoomData.members.length) {
+      _res.error(400, res, "Members of this chatroom is more than limit");
+      return
+    }
+
     if (chatRoomData.name) {
       // It's a group chat
       if (!chatRoomData.admins || chatRoomData.admins.length === 0) {
@@ -51,6 +61,8 @@ export const createChatRoom = async (
       } else if (!chatRoomData.admins.includes(req.user.id)) {
         chatRoomData.admins.push(req.user.id);
       }
+
+      if (!chatRoomData.limit) chatRoomData.limit = chatRoomData.members.length;
     } else {
       chatRoomData.limit = 2;
       chatRoomData.admins = [req.user.id];

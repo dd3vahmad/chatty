@@ -42,14 +42,13 @@ export const getAllUserProfiles = async (
   try {
     const searchQuery = (req.query.name as string)?.trim();
     const loggedInUserId = req.user.id;
-    console.log(searchQuery)
 
     if (!searchQuery) {
       _res.error(400, res, "Search query is required.");
       return
     }
 
-    // Search users by fuzzy username 
+    // 1. Search users by fuzzy username 
     const users = await User.aggregate([
       {
         $search: {
