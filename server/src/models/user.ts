@@ -21,7 +21,7 @@ export interface IUser extends Document {
 
   // Methods
   comparePassword(candidatePassword: string): Promise<boolean>;
-  getPublicProfile(): Partial<IUser>;
+  getPublicProfile(requestingUserId?: string): Promise<Partial<IUser> & { name?: string }>;
   generateAuthToken(): string;
   resetPassword(newPassword: string): Promise<void>;
 }

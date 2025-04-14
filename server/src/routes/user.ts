@@ -1,9 +1,14 @@
 import { Router } from "express";
-import { getChats, updateProfile } from "../controllers/user";
+import {
+  updateProfile,
+  getUserProfile,
+  getAllUserProfiles
+} from "../controllers/user";
 
 const router = Router();
 
+router.get("/", getUserProfile);
+router.get("/all", getAllUserProfiles);
 router.put("/update", updateProfile);
-router.get("/chats", getChats);
 
 export default router;
