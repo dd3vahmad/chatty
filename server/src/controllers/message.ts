@@ -10,7 +10,7 @@ export const getMessages = async (
 ) => {
   try {
     const { id: userToChatId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     const messages = await Message.find({
       $or: [
@@ -33,7 +33,7 @@ export const sendMessage = async (
   try {
     const { text, media } = req.body;
     const { id: receiverId } = req.params;
-    const senderId = req.user._id;
+    const senderId = req.user.id;
 
     let mediaUrl: string;
     if (media) {

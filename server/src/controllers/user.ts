@@ -10,7 +10,7 @@ export const getChats = async (
   next: NextFunction
 ) => {
   try {
-    const chats = await ChatRoom.findByMember(req.user._id as string);
+    const chats = await ChatRoom.findByMember(req.user.id as string);
 
     _res.success(200, res, "Chats fetched successfully", chats.map(chat => chat.getPublicProfile()));
   } catch (error) {
