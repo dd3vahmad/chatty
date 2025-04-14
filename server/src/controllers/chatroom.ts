@@ -306,3 +306,22 @@ export const joinChatRoom = async (
     next(error);
   }
 };
+
+/**
+* Get chatroom members
+*
+**/
+export const getChatRoomMembers = async (
+  req: IRequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { roomId } = req.params;
+    const members = await ChatRoom.getChatroomMembers(roomId, req.user.id);
+
+    _res.success(200, res, "Chatroom members fetched successfully", members)
+  } catch (error) {
+    next(error);
+  }
+}

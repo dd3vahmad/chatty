@@ -36,7 +36,7 @@ export const signup = async (
 
     attachJWT(user, res);
 
-    _res.success(201, res, "Registration successful", user.getPublicProfile());
+    _res.success(201, res, "Registration successful", await user.getPublicProfile());
   } catch (error: any) {
     next(error);
   }
@@ -68,7 +68,7 @@ export const signin = async (
 
     attachJWT(validUser, res);
 
-    _res.success(200, res, "Signin successful", validUser.getPublicProfile());
+    _res.success(200, res, "Signin successful", await validUser.getPublicProfile());
   } catch (error) {
     next(error);
   }

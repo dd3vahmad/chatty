@@ -40,55 +40,63 @@ export const getAllUserProfiles = async (
   next: NextFunction
 ) => {
   try {
-    const searchQuery = (req.query.name as string)?.trim();
+    let searchQuery = (req.query.name as string)?.trim();
     const loggedInUserId = req.user.id;
+    let users = [];
+    let friends = [];
 
-    if (!searchQuery) {
-      _res.error(400, res, "Search query is required.");
-      return
+    if (searchQuery) {
+      // 1. Search users by fuzzy username if search query exists
+      users = await User.aggregate([
+        {
+          $search: {
+            index: "default",
+            text: {
+              query: searchQuery,
+              path: ["username"],
+              fuzzy: { maxEdits: 2 }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            username: 1,
+            bio: 1,
+            email: 1,
+            pic: 1,
+            createdAt: 1,
+            updatedAt: 1
+          }
+        }
+      ]);
+
+      // 2. Get friends by fuzzy custom name match if search query exists
+      friends = await Friend.aggregate([
+        {
+          $search: {
+            index: "default",
+            text: {
+              query: searchQuery,
+              path: "name",
+              fuzzy: { maxEdits: 2 }
+            }
+          }
+        },
+        {
+          $match: { createdBy: new Types.ObjectId(loggedInUserId) }
+        }
+      ]);
+    } else {
+      // If no search query, get all users
+      users = await User.find({})
+        .select("_id username bio email pic createdAt updatedAt")
+        .lean();
+
+      // Get all friends of the logged in user
+      friends = await Friend.find({ createdBy: new Types.ObjectId(loggedInUserId) })
+        .lean();
     }
-
-    // 1. Search users by fuzzy username 
-    const users = await User.aggregate([
-      {
-        $search: {
-          index: "default",
-          text: {
-            query: searchQuery,
-            path: ["username"],
-            fuzzy: { maxEdits: 2 }
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          username: 1,
-          bio: 1,
-          email: 1,
-          pic: 1,
-          createdAt: 1,
-          updatedAt: 1
-        }
-      }
-    ]);
-
-    // 2. Get friends by fuzzy custom name match
-    const friends = await Friend.aggregate([
-      {
-        $search: {
-          index: "default",
-          text: {
-            query: searchQuery,
-            path: "name",
-            fuzzy: { maxEdits: 2 }
-          }
-        }
-      },
-      {
-        $match: { createdBy: new Types.ObjectId(loggedInUserId) }
-      }
-    ]);
 
     // 3. Fetch users from friend references
     const friendUserIds = friends.map(friend => friend.userId);

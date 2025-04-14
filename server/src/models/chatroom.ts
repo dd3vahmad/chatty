@@ -161,9 +161,57 @@ chatRoomSchema.statics.findByAdmin = function(userId: string) {
   return this.find({ admins: userId });
 };
 
+// Static method to get members of a chatroom with custom names for friends and admin status
+chatRoomSchema.statics.getChatroomMembers = async function(chatroomId: string, requestingUserId: string) {
+  try {
+    // Find the chatroom and populate members
+    const chatroom = await this.findById(chatroomId).populate({
+      path: 'members',
+      model: 'User'
+    }).lean();
+
+    if (!chatroom) {
+      throw new Error('Chatroom not found');
+    }
+
+    // Get members with custom info
+    const members = await Promise.all(chatroom.members.map(async (member: any) => {
+      const memberProfile = member.getPublicProfile ?
+        member.getPublicProfile(requestingUserId) :
+        member;
+
+      // Check if the member is an admin
+      const isAdmin = chatroom.admins.some((adminId: mongoose.Types.ObjectId) =>
+        adminId.equals(member._id)
+      );
+
+      return {
+        ...memberProfile,
+        isAdmin
+      };
+    }));
+
+    // Include guests if they exist
+    const allMembers = [...members];
+    if (chatroom.guests && chatroom.guests.length > 0) {
+      const guestMembers = chatroom.guests.map((guest: any) => ({
+        ...guest,
+        isAdmin: false
+      }));
+      allMembers.push(...guestMembers);
+    }
+
+    return allMembers;
+  } catch (error) {
+    console.error('Error getting chatroom members:', error);
+    throw error;
+  }
+};
+
 export interface IChatRoomModel extends Model<IChatRoom> {
   findByMember(userId: string): Promise<IChatRoom[]>;
   findByAdmin(userId: string): Promise<IChatRoom[]>;
+  getChatroomMembers(chatroomId: string, requestingUserId: string): Promise<any[]>;
 }
 
 const ChatRoom: IChatRoomModel = mongoose.model<IChatRoom, IChatRoomModel>("ChatRoom", chatRoomSchema);

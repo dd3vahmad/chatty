@@ -9,6 +9,6 @@ const router = Router();
 
 router.get("/:id", getUserProfile);
 router.get("/", getAllUserProfiles);
-router.put("/update", updateProfile);
+router.put("/", updateProfile);
 
 export default router;
