@@ -22,7 +22,25 @@ export const getChatRooms = async (
   try {
     const chats = await ChatRoom.findByMember(req.user.id as string);
 
-    _res.success(200, res, "Chats fetched successfully", chats.map(chat => chat.getPublicProfile()));
+    _res.success(200, res, "Chatrooms fetched successfully", chats.map(chat => chat.getPublicProfile()));
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+* Gets user chatrooms
+*
+**/
+export const getChatRoom = async (
+  req: IRequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const chat = await ChatRoom.findById(req.params.id);
+
+    _res.success(200, res, "Chatroom fetched successfully", chat.getPublicProfile());
   } catch (error) {
     next(error);
   }
