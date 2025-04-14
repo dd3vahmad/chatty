@@ -6,6 +6,13 @@ export interface IChatRoom extends Document {
   limit: number;
   members: mongoose.Types.ObjectId[];
   admins: mongoose.Types.ObjectId[];
+  guests?: {
+    _id: string;
+    username: string;
+    pic?: string;
+    isGuest: boolean;
+    joinedAt: Date;
+  }[];
   password: string;
   pic: string;
   isTemporary: boolean;
@@ -17,7 +24,30 @@ export interface IChatRoom extends Document {
   getPublicProfile(): Partial<IChatRoom>;
   hasMember(userId: mongoose.Types.ObjectId): boolean;
   hasAdmin(userId: mongoose.Types.ObjectId): boolean;
+  hasGuest(guestId: string): boolean;
 }
+
+const guestSchema = new Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  username: {
+    type: String,
+    required: true
+  },
+  pic: {
+    type: String
+  },
+  isGuest: {
+    type: Boolean,
+    default: true
+  },
+  joinedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { _id: false });
 
 const chatRoomSchema = new Schema<IChatRoom>(
   {
@@ -36,6 +66,7 @@ const chatRoomSchema = new Schema<IChatRoom>(
       type: Schema.Types.ObjectId,
       ref: "User",
     }],
+    guests: [guestSchema],
     password: {
       type: String,
       required: false,
@@ -82,10 +113,12 @@ chatRoomSchema.methods.updateProfilePicture = async function(
 // Method to get public profile (without password)
 chatRoomSchema.methods.getPublicProfile = function(): Partial<IChatRoom> {
   return {
+    id: this._id,
     name: this.name,
     limit: this.limit,
     members: this.members,
     admins: this.admins,
+    guests: this.guests,
     pic: this.pic,
     isTemporary: this.isTemporary,
     createdAt: this.createdAt,
@@ -105,6 +138,11 @@ chatRoomSchema.methods.hasAdmin = function(userId: string): boolean {
   return this.admins.some((adminId: mongoose.Types.ObjectId) =>
     adminId.equals(userId)
   );
+};
+
+// Method to check if guest is a member of chatroom
+chatRoomSchema.methods.hasGuest = function(guestId: string): boolean {
+  return this.guests && this.guests.some((guest: any) => guest._id === guestId);
 };
 
 // Static method to get all chatrooms where user is a member

@@ -159,7 +159,14 @@ export const joinChatRoomSchema = Joi.object({
       'any.required': 'Chat room ID is required'
     }),
   password: Joi.string()
-    .allow(null, '')
+    .allow(null, ''),
+  guestUsername: Joi.string()
+    .min(3)
+    .max(30)
+    .messages({
+      'string.min': 'Username must be at least 3 characters',
+      'string.max': 'Username cannot exceed 30 characters'
+    })
 });
 
 // Validate params for fetching a specific chatroom

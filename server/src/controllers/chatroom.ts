@@ -8,6 +8,8 @@ import {
   memberActionSchema,
   updateChatRoomSchema
 } from "../validations/chatroom";
+import { IUser } from "../models/user";
+import mongoose from "mongoose";
 
 /**
 * Create a new chat room (direct message or group chat)
@@ -153,7 +155,7 @@ export const addMember = async (
 *
 **/
 export const joinChatRoom = async (
-  req: IRequestWithUser,
+  req: IRequestWithUser | Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -161,44 +163,95 @@ export const joinChatRoom = async (
     const { error, value } = joinChatRoomSchema.validate(req.body);
     if (error) {
       _res.error(400, res, error.message);
-      return
+      return;
     }
 
-    const { chatRoomId, password } = value;
+    const { chatRoomId, password, guestUsername } = value;
 
     const chatRoom = await ChatRoom.findById(chatRoomId);
     if (!chatRoom) {
       _res.error(404, res, "Chat room not found");
-      return
+      return;
     }
 
     if (chatRoom.members.length >= chatRoom.limit) {
       _res.error(400, res, "Member limit reached for this chat room");
-      return
-    }
-
-    if (chatRoom.hasMember(req.user.id)) {
-      _res.error(400, res, "You are already a member of this chat room");
-      return
+      return;
     }
 
     if (chatRoom.password) {
       if (!password) {
         _res.error(400, res, "Password is required to join this chat room");
-        return
+        return;
       }
 
       const isPasswordValid = await chatRoom.comparePassword(password);
       if (!isPasswordValid) {
         _res.error(401, res, "Invalid password");
-        return
+        return;
       }
     }
 
-    chatRoom.members.push(req.user.id);
+    let userId: mongoose.Types.ObjectId;
+    let userInfo: IUser;
+
+    // Handle registered users
+    if ('user' in req && req.user) {
+      userId = req.user.id;
+      userInfo = {
+        _id: userId,
+        username: req.user.username,
+        pic: req.user.pic,
+        isGuest: false
+      };
+
+      // Check if registered user is already a member
+      if (chatRoom.hasMember(userId)) {
+        _res.error(400, res, "You are already a member of this chat room");
+        return;
+      }
+
+      chatRoom.members.push(userId);
+    } else {
+      // Handle guest users
+      if (!guestUsername) {
+        _res.error(400, res, "Guest username is required");
+        return;
+      }
+
+      // Generate a temporary guest ID
+      const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      // Create guest user info
+      userInfo = {
+        _id: guestId,
+        username: guestUsername,
+        pic: `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(guestUsername)}`,
+        isGuest: true
+      };
+
+      // Add to room's guest list instead of members (to avoid ObjectId issues)
+      if (!chatRoom.guests) {
+        chatRoom.guests = [];
+      }
+      chatRoom.guests.push(userInfo);
+    }
+
     await chatRoom.save();
 
-    _res.success(200, res, "Joined chat room successfully", chatRoom.getPublicProfile());
+    // Get socket.io instance and emit join event
+    const io = req.app.get('io');
+    if (io) {
+      io.to(chatRoomId).emit('user:join', {
+        chatRoomId,
+        user: userInfo
+      });
+    }
+
+    _res.success(200, res, "Joined chat room successfully", {
+      chatRoom: chatRoom.getPublicProfile(),
+      userInfo
+    });
   } catch (error) {
     next(error);
   }
