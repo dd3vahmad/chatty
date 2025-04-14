@@ -100,7 +100,7 @@ export const getChatRoomMessages = async (
         .slice(skip, skip + limit);
     }
 
-    _res.success(200, res, "Messages fetched successfully", {
+    _res.success(200, res, "Chatroom messages fetched successfully", {
       messages,
       pagination: {
         total: totalMessages,

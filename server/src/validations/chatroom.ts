@@ -50,6 +50,12 @@ export const createGroupChatRoomSchema = Joi.object({
       'string.max': 'Group name cannot exceed 50 characters',
       'any.required': 'Group name is required'
     }),
+  description: Joi.string()
+    .trim()
+    .max(250)
+    .messages({
+      'string.max': 'Group name cannot exceed 250 characters',
+    }),
   limit: Joi.number()
     .integer()
     .min(2)

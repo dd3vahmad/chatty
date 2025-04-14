@@ -39,6 +39,9 @@ export const getChatRoom = async (
 ) => {
   try {
     const chat = await ChatRoom.findById(req.params.id);
+    if (!chat) {
+      _res.error(400, res, "Chatroom with this Id does not exist");
+    }
 
     _res.success(200, res, "Chatroom fetched successfully", chat.getPublicProfile());
   } catch (error) {

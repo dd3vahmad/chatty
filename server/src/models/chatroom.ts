@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 export interface IChatRoom extends Document {
   name: string;
+  description: string;
   limit: number;
   members: mongoose.Types.ObjectId[];
   admins: mongoose.Types.ObjectId[];
@@ -52,6 +53,9 @@ const guestSchema = new Schema({
 const chatRoomSchema = new Schema<IChatRoom>(
   {
     name: {
+      type: String,
+    },
+    description: {
       type: String,
     },
     limit: {
@@ -111,10 +115,12 @@ chatRoomSchema.methods.updateProfilePicture = async function(
 };
 
 // Method to get public profile (without password)
-chatRoomSchema.methods.getPublicProfile = function(): Partial<IChatRoom> {
+chatRoomSchema.methods.getPublicProfile = function(): Partial<IChatRoom & { membersCount: number }> {
   return {
     id: this._id,
     name: this.name,
+    description: this.description,
+    membersCount: this.members.length,
     limit: this.limit,
     members: this.members,
     admins: this.admins,
