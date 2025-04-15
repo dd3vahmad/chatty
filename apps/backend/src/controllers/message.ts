@@ -6,40 +6,31 @@ import { IRequestWithUser } from "../types/interfaces";
 import Joi from "joi";
 import mongoose from "mongoose";
 import { IFriend } from "../models/friend";
+import { SocketEvents } from "@chatty/shared/src/";
 
 // Message validation schema
 export const messageSchema = Joi.object({
-  text: Joi.string()
-    .trim()
-    .allow(null, '')
-    .messages({
-      'string.base': 'Text must be a string'
-    }),
-  media: Joi.string()
-    .allow(null, '')
-    .messages({
-      'string.base': 'Media must be a string'
-    }),
-  roomId: Joi.string()
-    .required()
-    .messages({
-      'any.required': 'Room ID is required'
-    }),
-  userId: Joi.string()
-    .required()
-    .messages({
-      'any.required': 'User ID is required'
-    }),
-  username: Joi.string()
-    .required()
-    .messages({
-      'any.required': 'Username is required'
-    }),
-  isGuest: Joi.boolean()
-    .default(false)
-}).or('text', 'media').messages({
-  'object.missing': 'Either text or media is required'
-});
+  text: Joi.string().trim().allow(null, "").messages({
+    "string.base": "Text must be a string",
+  }),
+  media: Joi.string().allow(null, "").messages({
+    "string.base": "Media must be a string",
+  }),
+  roomId: Joi.string().required().messages({
+    "any.required": "Room ID is required",
+  }),
+  userId: Joi.string().required().messages({
+    "any.required": "User ID is required",
+  }),
+  username: Joi.string().required().messages({
+    "any.required": "Username is required",
+  }),
+  isGuest: Joi.boolean().default(false),
+})
+  .or("text", "media")
+  .messages({
+    "object.missing": "Either text or media is required",
+  });
 
 // Get messages for a specific chat room
 export const getChatRoomMessages = async (
@@ -65,7 +56,7 @@ export const getChatRoomMessages = async (
     let requestingUserId = null;
 
     // Check if user is registered
-    if ('user' in req && req.user) {
+    if ("user" in req && req.user) {
       userHasAccess = chatRoom.hasMember(req.user.id);
       requestingUserId = req.user.id;
     } else if (req.query.guestId) {
@@ -92,11 +83,17 @@ export const getChatRoomMessages = async (
     // Apply custom friend names if user is registered
     let messages = messagesRaw;
     if (requestingUserId) {
-      messages = await Message.findWithCustomNames(messageQuery, requestingUserId) as any;
+      messages = (await Message.findWithCustomNames(
+        messageQuery,
+        requestingUserId
+      )) as any;
 
       // Apply sorting and pagination manually since we're using a custom method
       messages = messages
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
         .slice(skip, skip + limit);
     }
 
@@ -106,8 +103,8 @@ export const getChatRoomMessages = async (
         total: totalMessages,
         page,
         limit,
-        pages: Math.ceil(totalMessages / limit)
-      }
+        pages: Math.ceil(totalMessages / limit),
+      },
     });
   } catch (error) {
     next(error);
@@ -142,27 +139,27 @@ export const sendMessage = async (
     let userInfo = null;
 
     // For registered users
-    if ('user' in req && req.user) {
+    if ("user" in req && req.user) {
       userHasAccess = chatRoom.hasMember(req.user.id);
       if (userHasAccess) {
         userInfo = {
           _id: req.user.id,
           username: req.user.username,
           pic: req.user.pic,
-          isGuest: false
+          isGuest: false,
         };
       }
     } else {
       // For guest users
       userHasAccess = chatRoom.hasGuest(userId);
       if (userHasAccess) {
-        const guest = chatRoom.guests.find(g => g._id === userId);
+        const guest = chatRoom.guests.find((g) => g._id === userId);
         if (guest) {
           userInfo = {
             _id: guest._id,
             username: guest.username,
             pic: guest.pic,
-            isGuest: true
+            isGuest: true,
           };
         }
       }
@@ -188,75 +185,113 @@ export const sendMessage = async (
       senderName: userInfo.username,
       senderPic: userInfo.pic,
       isGuest: userInfo.isGuest,
-      roomId
+      roomId,
     });
 
     await newMessage.save();
 
     // Get socket.io instance and emit message
-    const io = req.app.get('io');
+    const io = req.app.get("io");
     if (io) {
       // Get all users in the room to check for custom friend names
-      const roomMembers = [...chatRoom.members.map(id => id.toString())];
+      const roomMembers = [...chatRoom.members.map((id) => id.toString())];
 
       // For each member, check if they have a custom name for the sender
       if (!userInfo.isGuest) {
-        const Friend = mongoose.model('Friend');
-        const customNamePromises = roomMembers.map(async memberId => {
+        const Friend = mongoose.model("Friend");
+        const customNamePromises = roomMembers.map(async (memberId) => {
           if (memberId === userInfo._id.toString()) return null;
 
           const friendEntry = await Friend.findOne({
             createdBy: memberId,
-            userId: userInfo._id
+            userId: userInfo._id,
           }).lean();
 
-          return friendEntry ? { memberId, customName: (friendEntry as any as IFriend).name } : null;
+          return friendEntry
+            ? { memberId, customName: (friendEntry as any as IFriend).name }
+            : null;
         });
 
         const customNames = (await Promise.all(customNamePromises))
-          .filter(entry => entry !== null)
+          .filter((entry) => entry !== null)
           .reduce((acc, entry) => {
             acc[entry.memberId] = entry.customName;
             return acc;
           }, {});
 
         // Emit personalized messages to each user
-        roomMembers.forEach(memberId => {
+        roomMembers.forEach((memberId) => {
           const personalizedMessage = { ...newMessage.toObject() };
           if (customNames[memberId]) {
             personalizedMessage.senderName = customNames[memberId];
           }
 
-          io.to(`user:${memberId}`).emit('message:new', {
+          io.to(`user:${memberId}`).emit(SocketEvents.NEW_MESSAGE, {
             message: {
               ...personalizedMessage,
               sender: {
                 ...userInfo,
-                username: customNames[memberId] || userInfo.username
-              }
-            }
+                username: customNames[memberId] || userInfo.username,
+              },
+            },
           });
         });
 
         // Also emit to room for guests and others
-        io.to(roomId).emit('message:new', {
+        io.to(roomId).emit(SocketEvents.NEW_MESSAGE, {
           message: {
             ...newMessage.toObject(),
-            sender: userInfo
-          }
+            sender: userInfo,
+          },
         });
       } else {
         // For guest users, just emit to the room
-        io.to(roomId).emit('message:new', {
+        io.to(roomId).emit(SocketEvents.NEW_MESSAGE, {
           message: {
             ...newMessage.toObject(),
-            sender: userInfo
-          }
+            sender: userInfo,
+          },
         });
       }
     }
 
     _res.success(201, res, "Message sent successfully", newMessage);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Function to delete a message
+export const deleteMessage = async (
+  req: IRequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { messageId } = req.params;
+
+    // Check if message exists
+    const message = await Message.findById(messageId);
+    if (!message) {
+      _res.error(404, res, "Message not found");
+      return;
+    }
+
+    // Check if user has permission to delete the message
+    if (message.senderId.toString() !== req.user.id) {
+      _res.error(403, res, "You do not have permission to delete this message");
+      return;
+    }
+
+    await Message.deleteOne({ _id: messageId });
+
+    // Get socket.io instance and emit deletion event
+    const io = req.app.get("io");
+    if (io) {
+      io.to(message.roomId).emit(SocketEvents.DELETE_MESSAGE, { messageId });
+    }
+
+    _res.success(200, res, "Message deleted successfully");
   } catch (error) {
     next(error);
   }
