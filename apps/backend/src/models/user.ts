@@ -6,7 +6,13 @@ import cloudinary from "../lib/cloudinary";
 const PASSWORD_MIN_LENGTH = 8;
 const JWT_EXPIRATION = "7d";
 const SALT_ROUNDS = 10;
-const AVATAR_STYLES = ['micah', 'avataaars', 'personas', 'bottts', 'identicon'];
+const AVATAR_STYLES = [
+  "micah",
+  "avataaars",
+  "open-peeps",
+  "big-smile",
+  "adventurer",
+];
 
 export interface IUser extends Document {
   username: string;
@@ -21,7 +27,9 @@ export interface IUser extends Document {
 
   // Methods
   comparePassword(candidatePassword: string): Promise<boolean>;
-  getPublicProfile(requestingUserId?: string): Promise<Partial<IUser> & { name?: string }>;
+  getPublicProfile(
+    requestingUserId?: string
+  ): Promise<Partial<IUser> & { name?: string }>;
   generateAuthToken(): string;
   resetPassword(newPassword: string): Promise<void>;
 }
@@ -56,7 +64,10 @@ const userSchema = new Schema<IUser>(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minLength: [PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`],
+      minLength: [
+        PASSWORD_MIN_LENGTH,
+        `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`,
+      ],
       select: false,
     },
     pic: {
@@ -69,7 +80,7 @@ const userSchema = new Schema<IUser>(
     isGuest: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   {
     timestamps: true,
@@ -77,19 +88,20 @@ const userSchema = new Schema<IUser>(
       transform: (_, ret) => {
         delete ret.password;
         return ret;
-      }
-    }
+      },
+    },
   }
 );
 
 /**
  * Generate a random avatar for new users
  */
-userSchema.pre("save", function(next) {
+userSchema.pre("save", function (next) {
   if (!this.isNew || this.pic) return next();
 
   try {
-    const randomStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    const randomStyle =
+      AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
     const seed = this.username || this._id.toString();
     this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${seed}`;
   } catch (error) {
@@ -102,7 +114,7 @@ userSchema.pre("save", function(next) {
 /**
  * Hash password before saving
  */
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   try {
@@ -117,7 +129,7 @@ userSchema.pre("save", async function(next) {
 /**
  * Handle profile picture uploads
  */
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("pic")) return next();
 
   try {
@@ -139,7 +151,7 @@ userSchema.pre("save", async function(next) {
         resource_type: "image",
         transformation: [
           { width: 400, height: 400, crop: "limit" },
-          { quality: "auto" }
+          { quality: "auto" },
         ],
       });
 
@@ -149,7 +161,8 @@ userSchema.pre("save", async function(next) {
     next();
   } catch (error) {
     console.error("Error uploading profile picture:", error);
-    const randomStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    const randomStyle =
+      AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
     this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${this._id.toString()}`;
     this.cloudinaryId = null;
     next();
@@ -159,24 +172,26 @@ userSchema.pre("save", async function(next) {
 /**
  * Generate JWT auth token
  */
-userSchema.methods.generateAuthToken = function(): string {
+userSchema.methods.generateAuthToken = function (): string {
   if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET environment variable is not set");
   }
 
-  return jwt.sign(
-    { id: this._id },
-    process.env.JWT_SECRET,
-    { expiresIn: JWT_EXPIRATION }
-  );
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: JWT_EXPIRATION,
+  });
 };
 
 /**
  * Compare provided password with stored hash
  */
-userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
   try {
-    const user = this.password ? this : await User.findById(this._id).select("+password");
+    const user = this.password
+      ? this
+      : await User.findById(this._id).select("+password");
     if (!user || !user.password) {
       throw new Error("Password not available for comparison");
     }
@@ -190,7 +205,9 @@ userSchema.methods.comparePassword = async function(candidatePassword: string): 
 /**
  * Reset user password
  */
-userSchema.methods.resetPassword = async function(newPassword: string): Promise<void> {
+userSchema.methods.resetPassword = async function (
+  newPassword: string
+): Promise<void> {
   this.password = newPassword;
   await this.save();
 };
@@ -198,7 +215,9 @@ userSchema.methods.resetPassword = async function(newPassword: string): Promise<
 /**
  * Get public profile (excluding sensitive information)
  */
-userSchema.methods.getPublicProfile = async function(requestingUserId?: string): Promise<Partial<IUser> & { name?: string }> {
+userSchema.methods.getPublicProfile = async function (
+  requestingUserId?: string
+): Promise<Partial<IUser> & { name?: string }> {
   const profile: Partial<IUser> & { name?: string } = {
     id: this._id,
     username: this.username,
@@ -211,18 +230,18 @@ userSchema.methods.getPublicProfile = async function(requestingUserId?: string):
 
   if (requestingUserId) {
     try {
-      const Friend = mongoose.model('Friend');
+      const Friend = mongoose.model("Friend");
 
       const friendEntry = await Friend.findOne({
         createdBy: requestingUserId,
-        userId: this._id
+        userId: this._id,
       });
 
       if (friendEntry) {
         profile.name = friendEntry.name;
       }
     } catch (error) {
-      console.error('Error fetching friend data:', error);
+      console.error("Error fetching friend data:", error);
     }
   }
 

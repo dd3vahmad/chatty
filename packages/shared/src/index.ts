@@ -12,6 +12,11 @@ export interface User {
 }
 
 export enum SocketEvents {
+  CONNECT = "connect",
+  CONNECTION = "connection",
+  DISCONNECT = "disconnect",
+  ERROR = "error",
+  RECONNECT = "reconnect",
   JOIN_ROOM = "room:join",
   LEAVE_ROOM = "room:leave",
   SEND_MESSAGE = "message:send",

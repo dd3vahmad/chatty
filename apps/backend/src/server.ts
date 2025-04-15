@@ -84,7 +84,7 @@ io.use(async (socket, next) => {
   }
 });
 
-io.on("connection", (socket) => {
+io.on(SocketEvents.CONNECTION, (socket) => {
   console.log(`New connection: ${socket.id}`);
 
   // Join a chat room
@@ -185,7 +185,7 @@ io.on("connection", (socket) => {
   );
 
   // Handle disconnect
-  socket.on("disconnect", () => {
+  socket.on(SocketEvents.DISCONNECT, () => {
     console.log(`Connection closed: ${socket.id}`);
 
     if (socket.data.user) {
