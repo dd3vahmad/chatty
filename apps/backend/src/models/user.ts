@@ -13,6 +13,7 @@ const AVATAR_STYLES = [
   "big-smile",
   "adventurer",
 ];
+const AVATAR_BACKGROUNDS = ["ffdfbf", "ffd5dc", "d1d4f9", "c0aede", "b6e3f4"];
 
 export interface IUser extends Document {
   username: string;
@@ -102,11 +103,13 @@ userSchema.pre("save", function (next) {
   try {
     const randomStyle =
       AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    const randomBackground =
+      AVATAR_BACKGROUNDS[Math.floor(Math.random() * AVATAR_BACKGROUNDS.length)];
     const seed = this.username || this._id.toString();
-    this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${seed}`;
+    this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${seed}&backgroundColor=${randomBackground}`;
   } catch (error) {
     console.error("Error generating avatar:", error);
-    this.pic = `https://api.dicebear.com/7.x/identicon/svg?seed=${this._id.toString()}`;
+    this.pic = `https://api.dicebear.com/7.x/adventurer/svg?seed=${this._id.toString()}&backgroundColor=b6e3f4`;
   }
   next();
 });
@@ -163,7 +166,7 @@ userSchema.pre("save", async function (next) {
     console.error("Error uploading profile picture:", error);
     const randomStyle =
       AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
-    this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${this._id.toString()}`;
+    this.pic = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${this._id.toString()}&backgroundColor=b6e3f4`;
     this.cloudinaryId = null;
     next();
   }
