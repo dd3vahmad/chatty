@@ -13,12 +13,18 @@
   "dependencies": {
     "@astrojs/react": "^4.2.4",
     "@chatty/shared": "workspace:*",
+    "@tabler/icons": "^3.31.0",
+    "@tailwindcss/forms": "^0.5.10",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "astro": "^5.7.0",
     "lucide-react": "^0.488.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tailwind-variants": "^1.0.0",
+    "tailwindcss": "^4.1.4",
+    "tw-animate-css": "^1.2.5",
+    "vite@latest": "link:tailwindcss/vite@latest"
   }
 }
