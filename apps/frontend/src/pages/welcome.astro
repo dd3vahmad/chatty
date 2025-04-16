@@ -1,0 +1,18 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { Button } from "@/components/starwind/button"
+// import { Icon } from "astro-icon";
+---
+
+<AppLayout title="Welcome">
+  <div class="h-screen flex justify-center items-center bg-orange-100">
+    <div class="flex flex-col justify-center items-center lg:w-[700px] lg:h-[570px] bg-background rounded">
+      <!-- <Icon name="chat" /> -->
+      <img class="w-[170px]" src="https://api.dicebear.com/9.x/adventurer/svg?seed=Emery" alt="Smiling Avatar" />
+      <h1 class="text-3xl font-bold max-w-[200px] text-center">Welcome to Chatty!</h1>
+      <p class="text-gray-400 text-sm max-w-[300px]">Chatty supports sending and receiving a variety of media: text, photos, videos and documents</p>
+      <Button class:list={["bg-orange-500 text-xs font-bold rounded-xl px-16 py-6"]}>Let's Get Started</Button>
+      <p class="text-gray-400 text-sm font-semibold">Already have an account? <a href="/login" class="text-orange-500">Login</a></p>
+    </div>
+  </div>
+</AppLayout>

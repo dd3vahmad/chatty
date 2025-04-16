@@ -1,20 +1,9 @@
 ---
-import "@/styles/starwind.css";
-import { Button } from "../components/starwind/button/index"
+import BaseLayout from "@/layouts/BaseLayout.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Chatty | Connect with your circle in a fun way!</title>
-	</head>
-	<body>
-		<h1 class="border bg-orange-500">Chatty</h1>
-		<div class="grid place-items-center h-screen content-center">
-			<Button>starwind</Button>
-		</div>
-	</body>
-</html>
+<BaseLayout>
+	<div class="min-h-screen flex justify-center items-center bg-orange-100">
+		Chatty Landing Page...
+	</div>
+</BaseLayout>
