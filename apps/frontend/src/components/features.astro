@@ -1,0 +1,15 @@
+---
+import { features } from "@/lib/constants"
+import { Icon } from "astro-icon/components"
+---
+
+<div class="grid grid-cols-4 gap-x-5 my-5">
+  {features.map(feature => (
+    <div class="text-center flex flex-col justify-center items-center">
+      <div class="w-[60px] h-[60px] bg-orange-400 rounded flex flex-col justify-center items-center shadow-xl shadow-orange-100">
+        <Icon size={"sm"} class={"p-3"} color={"#ffffff"} name={feature.icon} />
+      </div>
+      <p class="text-xs w-full text-center font-semibold mt-1">{feature.label}</p>
+    </div>
+  ))}
+</div>
