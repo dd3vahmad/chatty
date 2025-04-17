@@ -13,14 +13,16 @@ import Features from "@/components/features.astro";
       </div>
 
       <div class="flex flex-col justify-center items-center w-full">
-        <h1 class="text-xl font-bold text-center mt-3">Chatty – Where Fun Conversations Live!</h1>
-        <p class="text-gray-600 text-sm w-[70%] text-center mx-auto mt-5">
+        <h1 class="text-xl font-bold text-center mt-3">Chatty | Where Fun Conversations Live!</h1>
+        <p class="text-gray-600 text-sm md:w-[70%] px-3 md:px-0 text-center mx-auto mt-5">
           Dive into endless fun with Chatty – the lightning-fast, super secure chatting app made for laughs, late-night convos, and epic group chats.
         </p>
       </div>
       <Features />
       <div class="flex flex-col justify-center items-center w-full">
-        <Button class:list={["bg-orange-400 shadow-xl shadow-orange-100 text-xs font-bold rounded px-26 py-6 hover:bg-orange-400 hover:opacity-95"]}>Let's Get Started</Button>
+        <a href="/login">
+          <Button class:list={["bg-orange-400 shadow-xl shadow-orange-100 text-xs font-bold rounded px-26 py-6 hover:bg-orange-400 hover:opacity-95"]}>Let's Get Started</Button>
+        </a>
         <p class="text-gray-600 text-sm mt-4">Already have an account? <a href="/login" class="text-orange-400 font-semibold hover:underline">Login</a></p>
       </div>
     </div>
