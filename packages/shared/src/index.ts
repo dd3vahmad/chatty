@@ -6,6 +6,16 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+export interface IPublicChat {
+  id: number;
+  name: string;
+  pic: string;
+  lastMessage: string;
+  lastMessageStatus: string;
+  isOnline: boolean;
+  time: Date | string;
+}
+
 export interface User {
   id: string;
   username: string;
