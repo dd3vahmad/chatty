@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { _res } from "../lib/utils";
 import User, { IUser } from "../models/user";
+import { IRequestWithUser } from "../types/interfaces";
 
 const attachJWT = (user: IUser, res: Response) => {
   const token = user.generateAuthToken();
@@ -11,6 +12,24 @@ const attachJWT = (user: IUser, res: Response) => {
     sameSite: "strict", // mitigates CSRF attacks
     secure: process.env.NODE_ENV !== "development" ? true : false,
   });
+};
+
+export const getCurrentUser = async (
+  req: IRequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const validUser = await User.findById(req.user.id);
+    _res.success(
+      200,
+      res,
+      "User profile fetched successfully",
+      validUser.getPublicProfile()
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const signup = async (
@@ -26,17 +45,22 @@ export const signup = async (
 
     if (existingUsername) {
       _res.error(400, res, "Username is already in use");
-      return
+      return;
     }
     if (existingUserEmail) {
       _res.error(400, res, "Email has already been used");
-      return
+      return;
     }
     const user = await User.create({ email, password, username });
 
     attachJWT(user, res);
 
-    _res.success(201, res, "Registration successful", await user.getPublicProfile());
+    _res.success(
+      201,
+      res,
+      "Registration successful",
+      await user.getPublicProfile()
+    );
   } catch (error: any) {
     next(error);
   }
@@ -68,7 +92,12 @@ export const signin = async (
 
     attachJWT(validUser, res);
 
-    _res.success(200, res, "Signin successful", await validUser.getPublicProfile());
+    _res.success(
+      200,
+      res,
+      "Signin successful",
+      await validUser.getPublicProfile()
+    );
   } catch (error) {
     next(error);
   }
@@ -81,7 +110,7 @@ export const signout = async (
 ) => {
   try {
     res.clearCookie("x-auth-token");
-    void req
+    void req;
     _res.success(200, res, "Signout successful");
   } catch (error) {
     next(error);

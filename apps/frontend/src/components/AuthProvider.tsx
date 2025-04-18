@@ -1,4 +1,3 @@
-// src/components/AuthProvider.jsx
 import type { IPublicUser } from "@chatty/shared/src";
 import axios from "axios";
 import {
@@ -9,10 +8,8 @@ import {
   type ReactNode,
 } from "react";
 
-// Create the context
 export const AuthContext: any = createContext(null);
 
-// Custom hook to use the auth context
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -37,7 +34,9 @@ export default function AuthProvider({
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/auth/me");
+      const response = await axios.get(
+        `${import.meta.env.SERVER_API_AUTH_URL}/me`
+      );
 
       if (response.status === 200) {
         setUser(response.data.data);
