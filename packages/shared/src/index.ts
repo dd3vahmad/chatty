@@ -1,8 +1,8 @@
-export interface ChatMessage {
-  id: string;
+export interface IPublicMessage {
+  id?: string;
   text: string;
-  userId: string;
-  username: string;
+  media?: ImageData;
+  sender: string;
   timestamp: Date;
 }
 
@@ -16,7 +16,7 @@ export interface IPublicChat {
   time: Date | string;
 }
 
-export interface User {
+export interface IPublicUser {
   id: string;
   username: string;
 }
