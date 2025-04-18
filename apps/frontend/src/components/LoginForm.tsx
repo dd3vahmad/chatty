@@ -39,7 +39,7 @@ const LoginForm = () => {
           onChange={(e) =>
             setFormData({ ...formData, identifier: e.target.value })
           }
-          className="w-full px-4 py-2 mt-1 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full px-4 py-2 mt-1 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
           placeholder="Enter your email or username"
           required
         />
@@ -58,7 +58,7 @@ const LoginForm = () => {
           onChange={(e) =>
             setFormData({ ...formData, identifier: e.target.value })
           }
-          className="w-full px-4 py-2 mt-1 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full px-4 py-2 mt-1 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
           placeholder="Enter your password"
           required
         />
