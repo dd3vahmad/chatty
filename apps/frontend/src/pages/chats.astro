@@ -1,24 +1,31 @@
 ---
-import AppLayout from '@/layouts/AppLayout.astro';
+import Protected from './protected.astro';
+import axios from 'axios';
+import type { IPublicChat } from '@chatty/shared/src';
 import { Icon } from 'astro-icon/components';
 import Base from '@/components/base.astro';
 import Search from '@/components/search.astro';
 import NoChats from '@/components/no-chats.astro';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/starwind/avatar';
-import { chats } from '@/lib/constants';
+
+const response = await axios.get(`${import.meta.env.SERVER_API_V1_URL}/chatrooms`).catch((error) => {
+  console.error('Error fetching chat rooms:', error);
+  return { status: 500, data: [] };
+});
+const rooms: IPublicChat[] = response.status == 200 ? await response.data : [];
 ---
 
-<AppLayout title="Chats">
+<Protected title="Chats">
   <div class="w-screen max-w-[400px] min-h-screen flex flex-col">
     <div class="w-full">
       <div class="flex justify-between items-center px-3 py-4">
         <h1 class="text-2xl font-bold text-orange-500">Chatty</h1>
-    
+
         <div class="flex items-center gap-2">
-          <Avatar size='lg' class={"border-0"}>
-            <AvatarImage 
-              src='https://api.dicebear.com/9.x/adventurer/svg?seed=Amaya&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf' 
-              alt={`Profile picture`} 
+          <Avatar size="lg" class={"border-0"}>
+            <AvatarImage
+              src="https://api.dicebear.com/9.x/adventurer/svg?seed=Amaya&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf"
+              alt={`Profile picture`}
             />
             <AvatarFallback class="flex justify-center font-semibold text-sm text-gray-500">
               N/A
@@ -29,61 +36,92 @@ import { chats } from '@/lib/constants';
       <Search />
     </div>
     <div class="mx-auto my-0 flex-1 w-full">
-      {
-        !chats.length ?
-          <NoChats />
-        : chats.map(chat => {
-            const names = chat.name.split(" ");
-            const firstname = names[0];
-            const secondname = names.length >= 2 ? names[1] : "";
-            const initials = secondname ? firstname[0] + secondname[0] : firstname ? firstname[0] : "N/A"
-    
-            return (
-              <div class="hover:bg-slate-50 flex items-center gap-3 px-4 transition-colors duration-200 cursor-pointer">
-                <div class="relative w-12 h-12">
-                  <Avatar size='lg' class={"border-0 z-0"}>
-                    <AvatarImage 
-                      src={chat.pic}
-                      alt={chat.name} 
-                    />
-                    <AvatarFallback class="flex justify-center font-semibold text-sm text-gray-500">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div hidden={!chat.isOnline} class="w-2.5 h-2.5 bg-green-500 rounded-full absolute bottom-1 right-0"></div>
+      {!rooms.length ? (
+        <NoChats />
+      ) : (
+        rooms.map((chat) => {
+          const names = chat.name.split(" ");
+          const firstname = names[0];
+          const secondname = names.length >= 2 ? names[1] : "";
+          const initials = secondname
+            ? firstname[0] + secondname[0]
+            : firstname
+              ? firstname[0]
+              : "N/A";
+
+          return (
+            <div class="hover:bg-slate-50 flex items-center gap-3 px-4 transition-colors duration-200 cursor-pointer">
+              <div class="relative w-12 h-12">
+                <Avatar size="lg" class={"border-0 z-0"}>
+                  <AvatarImage src={chat.pic} alt={chat.name} />
+                  <AvatarFallback class="flex justify-center font-semibold text-sm text-gray-500">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div
+                  hidden={!chat.isOnline}
+                  class="w-2.5 h-2.5 bg-green-500 rounded-full absolute bottom-1 right-0"
+                ></div>
+              </div>
+              <div class="flex-1 flex items-center justify-between">
+                <div class="flex-1 flex flex-col py-4">
+                  <span class="font-bold text-sm mb-1">{chat.name}</span>
+                  <span
+                    class={`text-xs truncate max-w-[65vw] ${chat.lastMessageStatus === "unread" && "font-semibold"}`}
+                  >
+                    {chat.lastMessage}
+                  </span>
                 </div>
-                <div class="flex-1 flex items-center justify-between">
-                  <div class="flex-1 flex flex-col py-4">
-                    <span class="font-bold text-sm mb-1">{chat.name}</span>
-                    <span class={`text-xs truncate max-w-[65vw] ${chat.lastMessageStatus === "unread" && "font-semibold"}`}>{chat.lastMessage}</span>
-                  </div>
-      
-                  <div class="flex flex-col gap-y-2 items-end">
-                    <span class="text-xs font-semibold text-gray-500">{chat.time}</span>
-                    <div class="text-xs w-4 h-4">
-                    <span hidden={chat.lastMessageStatus !== "unread"} class="rounded-full bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-300">
+
+                <div class="flex flex-col gap-y-2 items-end">
+                  <span class="text-xs font-semibold text-gray-500">
+                    {chat.time}
+                  </span>
+                  <div class="text-xs w-4 h-4">
+                    <span
+                      hidden={chat.lastMessageStatus !== "unread"}
+                      class="rounded-full bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-300"
+                    >
                       2
                     </span>
-                    <span hidden={chat.lastMessageStatus !== "sent" && chat.lastMessageStatus !== "received"}>
-                      <Icon name={chat.lastMessageStatus === "sent" ? "check" : chat.lastMessageStatus === "received" ? "check-double" : "check"} size={"20px"} class="text-gray-500" />
+                    <span
+                      hidden={
+                        chat.lastMessageStatus !== "sent" &&
+                        chat.lastMessageStatus !== "received"
+                      }
+                    >
+                      <Icon
+                        name={
+                          chat.lastMessageStatus === "sent"
+                            ? "check"
+                            : chat.lastMessageStatus === "received"
+                              ? "check-double"
+                              : "check"
+                        }
+                        size={"20px"}
+                        class="text-gray-500"
+                      />
                     </span>
                     <span hidden={chat.lastMessageStatus !== "read"}>
-                      <Icon name={"check-double"} size={"20px"} class="text-orange-600" />
+                      <Icon
+                        name={"check-double"}
+                        size={"20px"}
+                        class="text-orange-600"
+                      />
                     </span>
-                    </div>
                   </div>
                 </div>
               </div>
-            )
-          }
-        )
-      }
+            </div>
+          );
+        })
+      )}
     </div>
-    <Icon 
-      name={"chat-add"} 
-      size={"50px"} 
-      class="text-white bg-orange-500 cursor-pointer shadow-2xl shadow-amber-600 fixed bottom-10 right-4 p-3 rounded-lg" 
+    <Icon
+      name={"chat-add"}
+      size={"50px"}
+      class="text-white bg-orange-500 cursor-pointer shadow-2xl shadow-amber-600 fixed bottom-10 right-4 p-3 rounded-lg"
     />
     <Base />
   </div>
-</AppLayout>
+</Protected>

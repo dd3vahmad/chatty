@@ -1,0 +1,12 @@
+---
+import AuthProvider from "@/components/AuthProvider";
+import AppLayout from "@/layouts/AppLayout.astro";
+
+const { title, user } = Astro.props;
+---
+
+<AppLayout title={title}>
+  <AuthProvider client:load initialUser={user}>
+    <slot />
+  </AuthProvider>
+</AppLayout>
