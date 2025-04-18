@@ -35,7 +35,7 @@ export default function AuthProvider({
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.SERVER_API_AUTH_URL}/me`
+        `${import.meta.env.PUBLIC_SERVER_API_AUTH_URL}/me`
       );
 
       if (response.status === 200) {
@@ -46,6 +46,7 @@ export default function AuthProvider({
     } catch (error) {
       console.error("Auth check failed:", error);
       setUser(null);
+      window.location.replace("/login");
     } finally {
       setLoading(false);
     }

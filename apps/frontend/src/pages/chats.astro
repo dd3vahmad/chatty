@@ -9,7 +9,7 @@ import NoChats from '@/components/no-chats.astro';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/starwind/avatar';
 // import { chats } from '@/lib/constants';
 
-const response = await axios.get(`${import.meta.env.SERVER_API_V1_URL}/chatrooms`).catch((error) => {
+const response = await axios.get(`${import.meta.env.PUBLIC_SERVER_API_V1_URL}/chatrooms`).catch((error) => {
   console.error('Error fetching chat rooms:', error);
   return { status: 500, data: [] };
 });

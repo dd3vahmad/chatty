@@ -17,7 +17,7 @@ const ChatRoom = ({ room }: { room: IPublicChat }) => {
       try {
         const response = await axios
           .get(
-            `${import.meta.env.SERVER_API_V1_URL}/messages/${room.id}?include=true`
+            `${import.meta.env.PUBLIC_SERVER_API_V1_URL}/messages/${room.id}?include=true`
           )
           .then((res) => res.data)
           .catch((error) => {
