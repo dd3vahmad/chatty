@@ -20,6 +20,10 @@ export const getCurrentUser = async (
   next: NextFunction
 ) => {
   try {
+    if (!req.user) {
+      _res.error(401, res, "You're not authenticated");
+      return;
+    }
     const validUser = await User.findById(req.user.id);
     _res.success(
       200,

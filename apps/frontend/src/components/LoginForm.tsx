@@ -1,26 +1,20 @@
-import { useState } from "react";
-import axios from "axios";
+import { useEffect, useState, type FormEvent } from "react";
+import { useAuth } from "./AuthProvider";
 
 export default function LoginForm() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const { login, isAuthenticated } = useAuth();
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted");
-
-    const apiUrl = import.meta.env.PUBLIC_SERVER_API_AUTH_URL;
 
     try {
-      const response = await axios.post(`${apiUrl}/signin`, {
-        identifier,
-        password,
-      });
+      console.log("Login function");
+      const { success, error } = await login(identifier, password);
 
-      console.log("Response:", response.data);
-
-      if (response.data.failed) {
-        alert("Login failed: " + (response.data.message || "Unknown error"));
+      if (!success) {
+        alert("Login failed: " + (error || "Unknown error"));
       } else {
         alert("Login successful!");
         window.location.href = "/chats";
@@ -31,8 +25,14 @@ export default function LoginForm() {
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = "/chats";
+    }
+  }, [isAuthenticated]);
+
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form onSubmit={handleLogin} className="space-y-4 mb-5">
       <div>
         <label
           htmlFor="identifier"

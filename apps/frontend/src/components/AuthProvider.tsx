@@ -8,10 +8,26 @@ import {
   type ReactNode,
 } from "react";
 
-export const AuthContext: any = createContext(null);
+interface IAuth {
+  login: (identifier: string, password: string) => Promise<any>;
+  logout: () => Promise<any>;
+  user: IPublicUser | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+}
+
+const defaultAuthContext: IAuth = {
+  login: async () => ({ success: false, error: "Not initialized" }),
+  logout: async () => ({ success: false, error: "Not initialized" }),
+  user: null,
+  loading: true,
+  isAuthenticated: false,
+};
+
+export const AuthContext = createContext<IAuth>(defaultAuthContext);
 
 export function useAuth() {
-  return useContext(AuthContext);
+  return useContext(AuthContext) as IAuth;
 }
 
 export default function AuthProvider({
@@ -30,12 +46,12 @@ export default function AuthProvider({
     }
   }, [initialUser]);
 
-  // Function to check auth status
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.PUBLIC_SERVER_API_AUTH_URL}/me`
+        `${import.meta.env.PUBLIC_SERVER_API_AUTH_URL}/me`,
+        { withCredentials: true }
       );
 
       if (response.status === 200) {
@@ -46,17 +62,24 @@ export default function AuthProvider({
     } catch (error) {
       console.error("Auth check failed:", error);
       setUser(null);
-      window.location.replace("/login");
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
-      const response = await axios.post("/api/auth/login", {
-        body: { email, password },
-      });
+      console.log("AuthProvider: login called with", identifier); // ✅
+      const apiUrl = import.meta.env.PUBLIC_SERVER_API_AUTH_URL;
+      console.log("Login URL:", `${apiUrl}/login`); // ✅
+      const response = await axios.post(
+        `${apiUrl}/login`,
+        {
+          identifier,
+          password,
+        },
+        { withCredentials: true }
+      );
 
       if (response.status === 200) {
         setUser(response.data.data);
