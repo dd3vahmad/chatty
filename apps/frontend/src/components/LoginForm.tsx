@@ -1,49 +1,57 @@
-import axios from "axios";
 import { useState } from "react";
+import axios from "axios";
 
-const LoginForm = () => {
-  const [formData, setFormData] = useState({ identifier: "", password: "" });
+export default function LoginForm() {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
 
-  async function handleSubmit() {
+  const handleLogin = async (e: any) => {
+    e.preventDefault();
+    console.log("Form submitted");
+
+    const apiUrl = import.meta.env.PUBLIC_SERVER_API_AUTH_URL;
+    console.log("API URL:", apiUrl);
+
     try {
-      const response = await axios.post(
-        `${import.meta.env.PUBLIC_SERVER_API_AUTH_URL}/signin`,
-        formData
-      );
+      const response = await axios.post(`${apiUrl}/signin`, {
+        identifier,
+        password,
+      });
 
-      const { message, failed } = response.data;
-      if (failed) {
-        alert("One wierd error occurred!");
-        return;
+      console.log("Response:", response.data);
+
+      if (response.data.failed) {
+        alert("Login failed: " + (response.data.message || "Unknown error"));
+      } else {
+        alert("Login successful!");
+        window.location.href = "/chats";
       }
-
-      alert(message || "Login successful");
-      window.location.href = "/chats";
     } catch (error: any) {
-      console.error(error.message);
-      alert(error.response.data.message);
+      console.error("Login error:", error);
+      alert("Login error: " + (error.response?.data?.message || error.message));
     }
-  }
+  };
+
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form onSubmit={handleLogin} className="space-y-4">
       <div>
         <label
-          htmlFor="email"
+          htmlFor="identifier"
           className="block text-sm font-medium text-gray-700"
         >
           Email / Username
         </label>
         <input
-          id="email"
-          name="email"
-          onChange={(e) =>
-            setFormData({ ...formData, identifier: e.target.value })
-          }
+          id="identifier"
+          type="text"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           className="w-full px-4 py-2 mt-1 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
           placeholder="Enter your email or username"
           required
         />
       </div>
+
       <div>
         <label
           htmlFor="password"
@@ -52,17 +60,16 @@ const LoginForm = () => {
           Password
         </label>
         <input
-          type="password"
           id="password"
-          name="password"
-          onChange={(e) =>
-            setFormData({ ...formData, identifier: e.target.value })
-          }
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2 mt-1 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
           placeholder="Enter your password"
           required
         />
       </div>
+
       <button
         type="submit"
         className="w-full px-4 py-2 text-white bg-orange-400 rounded-md hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -71,6 +78,4 @@ const LoginForm = () => {
       </button>
     </form>
   );
-};
-
-export default LoginForm;
+}
