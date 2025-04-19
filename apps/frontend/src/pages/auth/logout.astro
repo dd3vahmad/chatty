@@ -9,5 +9,5 @@ const session = workos.userManagement.loadSealedSession({
 const url = await session.getLogoutUrl();
 
 Astro.cookies.delete('x-auth-token');
-Astro.redirect(url);
+return Astro.redirect(url);
 ---
