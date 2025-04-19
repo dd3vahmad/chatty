@@ -9,10 +9,37 @@ import { workos } from '@/lib/workos';
     return Astro.redirect("/auth/login");
   }
 
-  const { user } = await workos.userManagement.authenticateWithCode({
-    code,
-    clientId: import.meta.env.WORKOS_CLIENT_ID,
-  });
+  try {
+	    const authenticateResponse =
+	      await workos.userManagement.authenticateWithCode({
+	        clientId: import.meta.env.WORKOS_CLIENT_ID,
+	        code,
+	        session: {
+	          sealSession: true,
+	          cookiePassword: import.meta.env.WORKOS_COOKIE_PASSWORD,
+	        },
+	      });
+	
+	    const { user, sealedSession } = authenticateResponse;
 
-  return Astro.redirect('/chats');
+      if (!sealedSession) {
+        Astro.response.status = 400;
+        Astro.response.statusText = "No session provided";
+        return Astro.redirect("/auth/login");
+      }
+	
+	    // Store the session in a cookie
+	    Astro.cookies.set('x-auth-token', sealedSession, {
+	      path: '/',
+	      httpOnly: true,
+	      secure: true,
+	      sameSite: 'lax',
+	    });
+
+      // Business logic to handle the user object
+		
+	    return Astro.redirect('/chats');
+	  } catch (error) {
+	    return Astro.redirect('/auth/login');
+	  }
 ---

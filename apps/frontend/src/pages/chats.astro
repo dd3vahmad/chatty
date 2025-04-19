@@ -1,5 +1,4 @@
 ---
-import Protected from './protected.astro';
 import { Icon } from 'astro-icon/components';
 import Base from '@/components/base.astro';
 import Search from '@/components/search.astro';
@@ -10,9 +9,10 @@ import {
   AvatarImage 
 } from '@/components/starwind/avatar';
 import { chats } from '@/lib/constants';
+import AppLayout from '@/layouts/AppLayout.astro';
 ---
 
-<Protected title="Chats">
+<AppLayout title="Chats">
   <div class="w-screen max-w-[400px] min-h-screen flex flex-col">
     <div class="w-full">
       <div class="flex justify-between items-center px-3 py-4">
@@ -121,4 +121,4 @@ import { chats } from '@/lib/constants';
     />
     <Base />
   </div>
-</Protected>
+</AppLayout>
