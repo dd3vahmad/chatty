@@ -1,0 +1,18 @@
+---
+import { workos } from '@/lib/workos';
+
+  const code = Astro.url.searchParams.get("code");
+
+  if (!code) {
+    Astro.response.status = 400;
+    Astro.response.statusText = "No code provided";
+    return Astro.redirect("/auth/login");
+  }
+
+  const { user } = await workos.userManagement.authenticateWithCode({
+    code,
+    clientId: import.meta.env.WORKOS_CLIENT_ID,
+  });
+
+  return Astro.redirect('/chats');
+---

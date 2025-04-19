@@ -1,0 +1,12 @@
+---
+import { workos } from '@/lib/workos';
+
+const baseUrl = import.meta.env.APP_BASE_URL;
+const authorizationUrl = workos.userManagement.getAuthorizationUrl({
+  provider: 'authkit',
+  redirectUri: `${baseUrl}/auth/callback`,
+  clientId: import.meta.env.WORKOS_CLIENT_ID,
+});
+
+return Astro.redirect(authorizationUrl);
+---
