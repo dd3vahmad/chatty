@@ -10,6 +10,7 @@ import node from "@astrojs/node";
 
 // https://astro.build/config
 export default defineConfig({
+  middleware: true,
   output: "server", // Enable SSR
   adapter: node({
     mode: "standalone",

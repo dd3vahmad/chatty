@@ -1,18 +1,15 @@
 ---
 import Protected from './protected.astro';
-import axios from 'axios';
-import type { IPublicChat } from '@chatty/shared/src';
 import { Icon } from 'astro-icon/components';
 import Base from '@/components/base.astro';
 import Search from '@/components/search.astro';
 import NoChats from '@/components/no-chats.astro';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/starwind/avatar';
-
-const response = await axios.get(`${import.meta.env.PUBLIC_SERVER_API_V1_URL}/chatrooms`, { withCredentials: true }).catch((error) => {
-  console.error('Error fetching chat rooms:', error);
-  return { status: 500, data: [] };
-});
-const rooms: IPublicChat[] = response.status == 200 ? await response.data : [];
+import { 
+  Avatar, 
+  AvatarFallback, 
+  AvatarImage 
+} from '@/components/starwind/avatar';
+import { chats } from '@/lib/constants';
 ---
 
 <Protected title="Chats">
@@ -36,10 +33,10 @@ const rooms: IPublicChat[] = response.status == 200 ? await response.data : [];
       <Search />
     </div>
     <div class="mx-auto my-0 flex-1 w-full">
-      {!rooms.length ? (
+      {!chats.length ? (
         <NoChats />
       ) : (
-        rooms.map((chat) => {
+        chats.map((chat) => {
           const names = chat.name.split(" ");
           const firstname = names[0];
           const secondname = names.length >= 2 ? names[1] : "";

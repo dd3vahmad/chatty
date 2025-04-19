@@ -1,13 +1,12 @@
 import type { IPublicChat, IPublicMessage } from "@chatty/shared/src";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { io } from "socket.io-client";
-import { useAuth } from "./AuthProvider";
+// import { io } from "socket.io-client";
 
 const ChatRoom = ({ room }: { room: IPublicChat }) => {
   const [messages, setMessages] = useState<IPublicMessage[]>([]);
   const [newMessage, setNewMessage] = useState<IPublicMessage | null>(null);
-  const { user } = useAuth() as any;
+  // const { user } = useAuth() as any;
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -116,7 +115,7 @@ const ChatRoom = ({ room }: { room: IPublicChat }) => {
           messages.map((msg, i) => (
             <div
               key={i}
-              className={`message ${msg.sender === user?.username ? "own-message" : ""}`}
+              className={`message ${msg.sender === "theahmad" ? "own-message" : ""}`}
             >
               <div className="message-sender">{msg.sender}</div>
               <div className="message-text">{msg.text}</div>
@@ -137,7 +136,7 @@ const ChatRoom = ({ room }: { room: IPublicChat }) => {
             setNewMessage({
               ...newMessage,
               text: e.target.value,
-              sender: user.id,
+              sender: "user.id", // Replace with actual user ID
               timestamp: new Date(),
             })
           }

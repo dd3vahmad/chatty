@@ -1,35 +1,27 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { useAuth } from "./AuthProvider";
+import { useState, type FormEvent } from "react";
 
 export default function LoginForm() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isAuthenticated } = useAuth();
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
 
     try {
       console.log("Login function");
-      const { success, error } = await login(identifier, password);
+      // const { success, error } = await login(identifier, password);
 
-      if (!success) {
-        alert("Login failed: " + (error || "Unknown error"));
-      } else {
-        alert("Login successful!");
-        window.location.href = "/chats";
-      }
+      // if (!success) {
+      //   alert("Login failed: " + (error || "Unknown error"));
+      // } else {
+      //   alert("Login successful!");
+      //   window.location.href = "/chats";
+      // }
     } catch (error: any) {
       console.error("Login error:", error);
       alert("Login error: " + (error.response?.data?.message || error.message));
     }
   };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      window.location.href = "/chats";
-    }
-  }, [isAuthenticated]);
 
   return (
     <form onSubmit={handleLogin} className="space-y-4 mb-5">

@@ -1,12 +1,9 @@
 ---
-import AuthProvider from "@/components/AuthProvider";
 import BaseLayout from "./BaseLayout.astro";
 
 const { title } = Astro.props;
 ---
 
 <BaseLayout title={`${title} | Chatty`}>
-  <AuthProvider client:load initialUser={null}>
     <slot />
-  </AuthProvider>
 </BaseLayout>
