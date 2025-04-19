@@ -10,7 +10,6 @@ export default function LoginForm() {
     console.log("Form submitted");
 
     const apiUrl = import.meta.env.PUBLIC_SERVER_API_AUTH_URL;
-    console.log("API URL:", apiUrl);
 
     try {
       const response = await axios.post(`${apiUrl}/signin`, {
