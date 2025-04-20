@@ -5,7 +5,7 @@ export const workos = new WorkOS(import.meta.env.WORKOS_API_KEY, {
   clientId: import.meta.env.WORKOS_CLIENT_ID,
 });
 
-export const isAuthenticated = async (cookies: AstroCookies) => {
+const getSession = async (cookies: AstroCookies) => {
   const cookieSession = cookies.get("x-auth-token");
 
   const session = workos.userManagement.loadSealedSession({
@@ -13,5 +13,20 @@ export const isAuthenticated = async (cookies: AstroCookies) => {
     cookiePassword: import.meta.env.WORKOS_COOKIE_PASSWORD,
   });
 
-  return (await session.authenticate()).authenticated;
+  return await session.authenticate();
+};
+
+export const isAuthenticated = async (cookies: AstroCookies) => {
+  const result = await getSession(cookies);
+  return result.authenticated;
+};
+
+export const getUser = async (cookies: AstroCookies) => {
+  const result = await getSession(cookies);
+
+  if (result.authenticated) {
+    return result.user;
+  } else {
+    return null;
+  }
 };

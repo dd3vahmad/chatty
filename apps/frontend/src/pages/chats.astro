@@ -14,7 +14,7 @@ import { isAuthenticated } from '@/lib/workos';
 
 const authenticated = await isAuthenticated(Astro.cookies);
 
-if (authenticated) { 
+if (!authenticated) { 
   return Astro.redirect("/public/welcome")
 };
 ---
