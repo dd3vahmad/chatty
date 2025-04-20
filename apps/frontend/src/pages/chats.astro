@@ -10,9 +10,11 @@ import {
 } from '@/components/starwind/avatar';
 import { chats } from '@/lib/constants';
 import AppLayout from '@/layouts/AppLayout.astro';
-import { isAuthenticated } from '@/lib/workos';
+import { isAuthenticated, getUser } from '@/lib/workos';
 
+const defaultPic = "https://api.dicebear.com/9.x/adventurer/svg?seed=Amaya&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf";
 const authenticated = await isAuthenticated(Astro.cookies);
+const user = await getUser(Astro.cookies);
 
 if (!authenticated) { 
   return Astro.redirect("/public/welcome")
@@ -28,7 +30,7 @@ if (!authenticated) {
         <div class="flex items-center gap-2">
           <Avatar size="lg" class={"border-0"}>
             <AvatarImage
-              src="https://api.dicebear.com/9.x/adventurer/svg?seed=Amaya&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf"
+              src={user?.profilePictureUrl || defaultPic}
               alt={`Profile picture`}
             />
             <AvatarFallback class="flex justify-center font-semibold text-sm text-gray-500">
