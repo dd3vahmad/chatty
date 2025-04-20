@@ -10,6 +10,13 @@ import {
 } from '@/components/starwind/avatar';
 import { chats } from '@/lib/constants';
 import AppLayout from '@/layouts/AppLayout.astro';
+import { isAuthenticated } from '@/lib/workos';
+
+const authenticated = await isAuthenticated(Astro.cookies);
+
+if (authenticated) { 
+  return Astro.redirect("/public/welcome")
+};
 ---
 
 <AppLayout title="Chats">
