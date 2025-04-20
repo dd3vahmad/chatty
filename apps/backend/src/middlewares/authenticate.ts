@@ -3,8 +3,9 @@ import { _res } from "../lib/utils";
 import jwt from "jsonwebtoken";
 import { IRequestWithUser } from "../types/interfaces";
 import { IUser } from "../models/user";
+import { getUser } from "../lib/workos";
 
-export const authenticate = (
+export const authenticate = async (
   req: IRequestWithUser,
   res: Response,
   next: NextFunction
@@ -16,14 +17,25 @@ export const authenticate = (
       _res.error(401, res, "Unauthenticated - No token provided.");
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!!process.env.WORKOS) {
+      const user = await getUser(token);
+      if (!user) {
+        _res.error(401, res, "Unauthenticated - Invalid token.");
+      }
 
-    if (!decoded) {
-      _res.error(401, res, "Unauthenticated - Invalid token.");
+      req.user = { id: user.id } as any as IUser;
+      next();
+    } else {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      if (!decoded) {
+        _res.error(401, res, "Unauthenticated - Invalid token.");
+        return;
+      }
+
+      req.user = decoded as any as IUser;
+      next();
     }
-
-    req.user = decoded as any as IUser;
-    next()
   } catch (error) {
     next(error);
   }
