@@ -16,10 +16,8 @@ const defaultPic = "https://api.dicebear.com/9.x/adventurer/svg?seed=Amaya&backg
 const authenticated = await isAuthenticated(Astro.cookies);
 const user = await getUser(Astro.cookies);
 
-// console.log("User: ", user);
-
 if (!authenticated) { 
-  return Astro.redirect("/public/welcome")
+  return Astro.redirect("/p/welcome")
 };
 ---
 

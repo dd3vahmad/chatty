@@ -14,38 +14,36 @@ export const authenticate = async (
     const token = req.cookies["x-auth-token"];
 
     if (!token) {
-      return _res.error(401, res, "Unauthenticated - No token provided.");
+      _res.error(401, res, "Unauthenticated - No token provided.");
+      return;
     }
 
     if (process.env.WORKOS_ENABLED === "true") {
       try {
         const workosUser = await getUser(token);
         if (!workosUser) {
-          return _res.error(
-            401,
-            res,
-            "Unauthenticated - Invalid WorkOS session."
-          );
+          _res.error(401, res, "Unauthenticated - Invalid WorkOS session.");
+          return;
         }
 
         const user = await handleWorkOSAuth(workosUser);
         req.user = user;
         return next();
       } catch (workosError) {
-        console.error("WorkOS auth error:", workosError);
-        // If WorkOS auth fails, try falling back to JWT auth
         try {
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
           const user = await User.findById((decoded as any).id);
 
           if (!user) {
-            return _res.error(401, res, "Unauthenticated - User not found.");
+            _res.error(401, res, "Unauthenticated - User not found.");
+            return;
           }
 
           req.user = user;
           return next();
         } catch (jwtError) {
-          return _res.error(401, res, "Unauthenticated - Invalid token.");
+          _res.error(401, res, "Unauthenticated - Invalid token.");
+          return;
         }
       }
     } else {
@@ -54,13 +52,15 @@ export const authenticate = async (
         const user = await User.findById((decoded as any).id);
 
         if (!user) {
-          return _res.error(401, res, "Unauthenticated - User not found.");
+          _res.error(401, res, "Unauthenticated - User not found.");
+          return;
         }
 
         req.user = user;
         return next();
       } catch (error) {
-        return _res.error(401, res, "Unauthenticated - Invalid token.");
+        _res.error(401, res, "Unauthenticated - Invalid token.");
+        return;
       }
     }
   } catch (error) {

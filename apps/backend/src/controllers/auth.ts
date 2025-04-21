@@ -140,14 +140,7 @@ export const workosCallback = async (
       return;
     }
 
-    const user = await handleWorkOSAuth(workosUser); // Get or create user from WorkOS data
-
-    // Set cookies for both auth systems
-    res.cookie("x-auth-token", workosToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const user = await handleWorkOSAuth(workosUser);
 
     _res.success(200, res, "User registered successfully", {
       user: await user.getPublicProfile(),

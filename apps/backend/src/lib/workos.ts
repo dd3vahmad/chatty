@@ -20,13 +20,13 @@ export const handleWorkOSAuth = async (workosUser: any) => {
         }
       } else {
         user = new User({
-          username: workosUser.email.split("@")[0], // Default username from email
+          username: workosUser.email.split("@")[0],
           email: workosUser.email,
           workosId: workosUser.id,
           password: await bcrypt.hash(
             crypto.randomBytes(20).toString("hex"),
             10
-          ), // Random secure password
+          ),
           pic: workosUser.profilePictureUrl || undefined,
           firstName: workosUser.firstName,
           lastName: workosUser.lastName,
@@ -34,13 +34,11 @@ export const handleWorkOSAuth = async (workosUser: any) => {
         });
       }
     } else {
-      // Update existing WorkOS user with latest info
       user.email = workosUser.email;
       user.firstName = workosUser.firstName;
       user.lastName = workosUser.lastName;
       user.emailVerified = workosUser.emailVerified;
 
-      // Only update profile picture if user hasn't uploaded a custom one
       if (workosUser.profilePictureUrl && !user.cloudinaryId) {
         user.pic = workosUser.profilePictureUrl;
       }
@@ -49,7 +47,6 @@ export const handleWorkOSAuth = async (workosUser: any) => {
     await user.save();
     return user;
   } catch (error) {
-    console.error("Error handling WorkOS auth:", error);
     throw error;
   }
 };

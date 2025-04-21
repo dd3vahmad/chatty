@@ -48,7 +48,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
   const isAuthRoute = pathname.startsWith("/auth");
   const isApiRoute = pathname.startsWith("/api");
-  const isPublicRoute = pathname.startsWith("/public");
+  const isPublicRoute = pathname.startsWith("/p");
 
   if (!isAuthRoute && !isApiRoute && !isPublicRoute) {
     return await withAuth(context, next);
