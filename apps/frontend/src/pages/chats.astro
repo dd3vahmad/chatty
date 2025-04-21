@@ -12,6 +12,7 @@ import { chats } from '@/lib/constants';
 import AppLayout from '@/layouts/AppLayout.astro';
 import { isAuthenticated, getUser } from '@/lib/workos';
 import { getInitials } from '@/lib/utils';
+import axios from 'axios';
 
 const defaultPic = "https://api.dicebear.com/9.x/adventurer/svg?seed=Amaya&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf";
 const authenticated = await isAuthenticated(Astro.cookies);
@@ -20,6 +21,25 @@ const user = await getUser(Astro.cookies);
 if (!authenticated) { 
   return Astro.redirect("/p/welcome")
 };
+
+try {
+  const response = await axios.get(
+    `${import.meta.env.PUBLIC_SERVER_API_V1_URL}/chatrooms`,
+    { withCredentials: true }
+  );
+  console.log("Chatrooms: ", response.data);
+} catch (error: any) {
+  console.error("Error fetching chatrooms:", error.response?.status, error.response?.data);
+  
+  // If unauthorized, redirect to login
+  if (error.response?.status === 401) {
+    Astro.redirect('/auth/login');
+    // return [];
+  }
+  
+  // Return empty array or handle error as appropriate
+  // return [];
+}
 ---
 
 <AppLayout title="Chats">

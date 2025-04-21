@@ -27,19 +27,19 @@ try {
   }
   
   try {
-    await axios.post(
+    const response = await axios.post(
       `${import.meta.env.PUBLIC_SERVER_API_AUTH_URL}/callback`,
       { sessionToken: sealedSession },
       { withCredentials: true }
     );
 
-		Astro.cookies.set("x-auth-token", sealedSession, {
-      path: "/",
-      httpOnly: true,
-      secure: import.meta.env.PROD,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "lax",
-    })
+		// Astro.cookies.set("x-auth-token", sealedSession, {
+    //   path: "/",
+    //   httpOnly: true,
+    //   secure: import.meta.env.PROD,
+    //   maxAge: 7 * 24 * 60 * 60 * 1000,
+    //   sameSite: "lax",
+    // })
     
     return Astro.redirect('/chats');
   } catch (axiosError) {

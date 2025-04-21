@@ -26,7 +26,6 @@ export interface IUser extends Document {
   firstName?: string;
   lastName?: string;
   emailVerified?: boolean;
-  profilePictureUrl?: string;
   lastSignInAt?: Date;
   isGuest: boolean;
   createdAt: Date;
