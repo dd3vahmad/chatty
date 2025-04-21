@@ -1,7 +1,8 @@
 ---
-import AppLayout from "@/layouts/AppLayout.astro";
-import { Button } from "@/components/starwind/button"
-import Features from "@/components/features.astro";
+import AppLayout from "../../layouts/AppLayout.astro";
+import { Button } from "../../components/starwind/button"
+import Features from "../../components/features.astro";
+import { Icon } from "astro-icon/components";
 ---
 
 <AppLayout title="Welcome">
@@ -22,7 +23,12 @@ import Features from "@/components/features.astro";
       <Features />
       <div class="flex flex-col justify-center items-center w-full">
         <a href="/login">
-          <Button class:list={["bg-orange-400 shadow-xl shadow-orange-100 text-xs font-bold rounded px-26 py-6 hover:bg-orange-400 hover:opacity-95"]}>Let's Get Started</Button>
+          <Button 
+            class:list={["bg-orange-400 shadow-xl shadow-orange-100 text-xs font-bold rounded w-full py-6 hover:bg-orange-400 hover:opacity-95"]}
+          >
+            <Icon name={"chat-outline"} /> 
+            Start a chat
+          </Button>
         </a>
         <p class="text-gray-600 text-sm mt-4">Already have an account? <a href="/auth/login" class="text-orange-400 font-semibold hover:underline">Login</a></p>
       </div>
