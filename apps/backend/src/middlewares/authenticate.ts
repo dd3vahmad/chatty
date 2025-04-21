@@ -2,8 +2,8 @@ import { NextFunction, Response } from "express";
 import { _res } from "../lib/utils";
 import jwt from "jsonwebtoken";
 import { IRequestWithUser } from "../types/interfaces";
-import { IUser } from "../models/user";
-import { getUser } from "../lib/workos";
+import { getUser, handleWorkOSAuth } from "../lib/workos";
+import User from "../models/user";
 
 export const authenticate = async (
   req: IRequestWithUser,
@@ -14,27 +14,54 @@ export const authenticate = async (
     const token = req.cookies["x-auth-token"];
 
     if (!token) {
-      _res.error(401, res, "Unauthenticated - No token provided.");
+      return _res.error(401, res, "Unauthenticated - No token provided.");
     }
 
-    if (!!process.env.WORKOS) {
-      const user = await getUser(token);
-      if (!user) {
-        _res.error(401, res, "Unauthenticated - Invalid token.");
-      }
+    if (process.env.WORKOS_ENABLED === "true") {
+      try {
+        const workosUser = await getUser(token);
+        if (!workosUser) {
+          return _res.error(
+            401,
+            res,
+            "Unauthenticated - Invalid WorkOS session."
+          );
+        }
 
-      req.user = { id: user.id } as any as IUser;
-      next();
+        const user = await handleWorkOSAuth(workosUser);
+        req.user = user;
+        return next();
+      } catch (workosError) {
+        console.error("WorkOS auth error:", workosError);
+        // If WorkOS auth fails, try falling back to JWT auth
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          const user = await User.findById((decoded as any).id);
+
+          if (!user) {
+            return _res.error(401, res, "Unauthenticated - User not found.");
+          }
+
+          req.user = user;
+          return next();
+        } catch (jwtError) {
+          return _res.error(401, res, "Unauthenticated - Invalid token.");
+        }
+      }
     } else {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById((decoded as any).id);
 
-      if (!decoded) {
-        _res.error(401, res, "Unauthenticated - Invalid token.");
-        return;
+        if (!user) {
+          return _res.error(401, res, "Unauthenticated - User not found.");
+        }
+
+        req.user = user;
+        return next();
+      } catch (error) {
+        return _res.error(401, res, "Unauthenticated - Invalid token.");
       }
-
-      req.user = decoded as any as IUser;
-      next();
     }
   } catch (error) {
     next(error);

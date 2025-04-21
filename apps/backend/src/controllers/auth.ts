@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { _res } from "../lib/utils";
 import User, { IUser } from "../models/user";
 import { IRequestWithUser } from "../types/interfaces";
+import { getUser, handleWorkOSAuth } from "../lib/workos";
 
 const attachJWT = (user: IUser, res: Response) => {
   const token = user.generateAuthToken();
@@ -116,6 +117,42 @@ export const signout = async (
     res.clearCookie("x-auth-token");
     void req;
     _res.success(200, res, "Signout successful");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const workosCallback = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const workosToken = req.body.sessionToken || req.query.sessionToken;
+    if (!workosToken) {
+      _res.error(400, res, "No WorkOS session token provided");
+      return;
+    }
+
+    const workosUser = await getUser(workosToken);
+    if (!workosUser) {
+      _res.error(401, res, "Invalid WorkOS session");
+      return;
+    }
+
+    const user = await handleWorkOSAuth(workosUser); // Get or create user from WorkOS data
+
+    // Set cookies for both auth systems
+    res.cookie("x-auth-token", workosToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    _res.success(200, res, "User registered successfully", {
+      user: await user.getPublicProfile(),
+      token: workosToken,
+    });
   } catch (error) {
     next(error);
   }

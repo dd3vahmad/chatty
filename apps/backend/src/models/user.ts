@@ -22,6 +22,12 @@ export interface IUser extends Document {
   password: string;
   pic: string;
   cloudinaryId: string | null;
+  workosId: string | null;
+  firstName?: string;
+  lastName?: string;
+  emailVerified?: boolean;
+  profilePictureUrl?: string;
+  lastSignInAt?: Date;
   isGuest: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +51,9 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       minLength: [3, "Username must be at least 3 characters long"],
       maxLength: [30, "Username must be less than 30 characters long"],
+    },
+    workosId: {
+      type: String,
     },
     bio: {
       type: String,
