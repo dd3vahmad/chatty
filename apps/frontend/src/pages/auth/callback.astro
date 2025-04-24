@@ -33,13 +33,13 @@ try {
       { withCredentials: true }
     );
 
-		// Astro.cookies.set("x-auth-token", sealedSession, {
-    //   path: "/",
-    //   httpOnly: true,
-    //   secure: import.meta.env.PROD,
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
-    //   sameSite: "lax",
-    // })
+		Astro.cookies.set("x-auth-token", sealedSession, {
+      path: "/",
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+    })
     
     return Astro.redirect('/chats');
   } catch (axiosError) {
